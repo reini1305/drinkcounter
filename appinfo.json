@@ -1,0 +1,142 @@
+{
+  "uuid": "703b16db-2e94-4b39-ea83-f3206a254235",
+  "shortName": "Drink Counter",
+  "longName": "Drink Counter",
+  "companyName": "Christian Reinbacher",
+  "versionCode": 19,
+  "versionLabel": "5.3.1",
+  "watchapp": {
+    "watchface": false
+  },
+  "capabilities": [ "configurable" ],
+  "appKeys": {
+      "sex":6,
+      "weight":7,
+      "size":8,
+      "unit":9,
+      "output":10,
+      "ebac": 11
+  },
+  "preferences": {
+    "embedded": false,
+    "debug": false,
+    "url": "http://musikkapelle-hollenegg.at/images/autoconfig.html",
+    "description": "Remember: The BAC calculation is just an estimation. Never drive under the influence of alcohol!",
+    "items": [{
+              "name": "ebac",
+              "title": "Estimate BAC?",
+              "type": "boolean",
+              "off-text": "No",
+              "on-text":"Yes",
+              "default": true
+              },
+              {
+              "name": "sex",
+              "title": "Gender",
+              "type": "enum",
+              "choices": {
+              "MALE": "Male",
+              "FEMALE": "Female"
+              },
+              "default": 0
+              },
+              {
+              "name": "weight",
+              "title": "Weight",
+              "type": "integer",
+              "min": 0,
+              "max": 300,
+              "default": 75
+              },
+              {
+              "name": "unit",
+              "title": "Weight Unit",
+              "type": "enum",
+              "choices": {
+              "KG": "Kilograms",
+              "POUNDS": "Pounds"
+              },
+              "default": 0
+              },
+              {
+              "name": "size",
+              "title": "Beer Size",
+              "type": "enum",
+              "choices": {
+              "REGULAR": "Regular (0.33l)",
+              "LARGE": "Large (0.5l)"
+              },
+              "default": 0
+              },
+              {
+              "name": "output",
+              "title": "Output",
+              "type": "enum",
+              "choices": {
+              "PERMILLE": "Per Mille",
+              "PERCENT": "Per Cent"
+              },
+              "default": 0
+              }]
+  },
+  "resources": {
+    "media": [
+              {
+              "menuIcon": true,
+              "type": "png",
+              "name": "IMAGE_MENU_ICON",
+              "file": "images/logo.png"
+              },
+              {
+              "type": "png",
+              "name": "IMAGE_STATUS_ICON",
+              "file": "images/status_icon.png"
+              },
+              {
+              "type": "png",
+              "name": "IMAGE_ACTION_ICON_CROSS",
+              "file": "images/action_icon_cross.png"
+              },
+              {
+              "type": "png",
+              "name": "IMAGE_ACTION_ICON_CHECK",
+              "file": "images/action_icon_check.png"
+              },
+      {
+        "type": "png",
+        "name": "IMAGE_ACTION_ICON_PLUS",
+        "file": "images/action_icon_plus.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_ACTION_ICON_RIGHT",
+        "file": "images/action_icon_right.png"
+      },
+              {
+              "type": "png",
+              "name": "IMAGE_ACTION_ICON_RESET",
+              "file": "images/action_icon_reset.png"
+              },
+              {
+              "type": "png",
+              "name": "IMAGE_BEER",
+              "file": "images/beer.png"
+              },
+              {
+              "type": "png",
+              "name": "IMAGE_WINE",
+              "file": "images/wine.png"
+              },
+              {
+              "type": "png",
+              "name": "IMAGE_COCKTAIL",
+              "file": "images/cocktail.png"
+              },
+              {
+              "type": "png",
+              "name": "IMAGE_SHOT",
+              "file": "images/shot.png"
+              }
+    ]
+  }
+}
