@@ -245,8 +245,8 @@ static void right_click_handler(ClickRecognizerRef recognizer, void *context) {
 static void click_config_provider(void *context) {
   const uint16_t repeat_interval_ms = 1000;
   window_single_repeating_click_subscribe(BUTTON_ID_UP, repeat_interval_ms, (ClickHandler) reset_click_handler);
-  window_single_repeating_click_subscribe(BUTTON_ID_SELECT, repeat_interval_ms, (ClickHandler) right_click_handler);
-  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, repeat_interval_ms, (ClickHandler) increment_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, repeat_interval_ms, (ClickHandler) right_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_SELECT, repeat_interval_ms, (ClickHandler) increment_click_handler);
 }
 
 static void window_load(Window *me) {
@@ -258,8 +258,8 @@ static void window_load(Window *me) {
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 
   action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, action_icon_reset);
-  action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, action_icon_right);
-  action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, action_icon_plus);
+  action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, action_icon_right);
+  action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, action_icon_plus);
 
   Layer *layer = window_get_root_layer(me);
   width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
