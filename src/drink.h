@@ -19,6 +19,7 @@ typedef struct Drink{
   int num_drinks;
   unsigned char storage_slot;
   char text[3];
+  GFont font;
 }Drink;
 
 void loadDrink(Drink *drink)
@@ -37,7 +38,8 @@ void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned
   int text_height = 100;
   
   drink->text_layer = text_layer_create(GRect(position_x, text_y, grid_size_v, text_height));
-  text_layer_set_font(drink->text_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_30)));
+  drink->font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_30));
+  text_layer_set_font(drink->text_layer, drink->font);
   //text_layer_set_font(drink->text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_background_color(drink->text_layer, GColorClear);
   text_layer_set_text_alignment(drink->text_layer,GTextAlignmentCenter);
@@ -59,6 +61,7 @@ void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned
 void destroyDrink(Drink *drink)
 {
   saveDrink(drink);
+  fonts_unload_custom_font(drink->font);
   text_layer_destroy(drink->text_layer);
   inverter_layer_destroy(drink->inverter_layer);
   bitmap_layer_destroy(drink->bitmap_layer);
