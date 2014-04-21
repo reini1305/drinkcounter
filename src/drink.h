@@ -37,7 +37,8 @@ void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned
   int text_height = 100;
   
   drink->text_layer = text_layer_create(GRect(position_x, text_y, grid_size_v, text_height));
-  text_layer_set_font(drink->text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_font(drink->text_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_30)));
+  //text_layer_set_font(drink->text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_background_color(drink->text_layer, GColorClear);
   text_layer_set_text_alignment(drink->text_layer,GTextAlignmentCenter);
   layer_add_child(parent_layer, text_layer_get_layer(drink->text_layer));
