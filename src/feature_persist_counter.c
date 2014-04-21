@@ -50,7 +50,6 @@ static struct tm current_time;
 
 static int current_drink = 0;
 
-
 static void light_off(void *data)
 {
   light_enable(false);
@@ -83,9 +82,7 @@ static float max(float val1,float val2)
 }
 
 static void update_text() {
-  //static char last_drink_text[50];
-  //static char last_drink_difference_text[15];
-  
+
   int day1 = current_time.tm_yday;
   int hour1 = current_time.tm_hour;
   int min1 = current_time.tm_min;
@@ -111,32 +108,13 @@ static void update_text() {
     text_layer_set_text(header_text_layer,"Drink Counter");
   else
   {
-    /*if(diff > 24*60)
-      snprintf(last_drink_difference_text, sizeof(last_drink_difference_text), "%u day(s)",diff/(24*60));
-    else if(diff > 60)
-      snprintf(last_drink_difference_text, sizeof(last_drink_difference_text), "%u hour(s)",diff/60);
-    else
-      snprintf(last_drink_difference_text, sizeof(last_drink_difference_text), "%u min",diff);
-    
-    snprintf(last_drink_text, sizeof(last_drink_text), "Last drink %s ago",last_drink_difference_text);
-    text_layer_set_text(header_text_layer,last_drink_text);*/
-    
-    static char ebac_text[50];
+    static char ebac_text[30];
     // Estimate BAC regarding formula on wikipedia
     float ebac = max(get_ebac(diff,sumdrinks),0.0f);
-    static char unit_text[4],output_text[4];
-    if(getUnit()==0)
-      snprintf(unit_text,sizeof(unit_text),"kg");
-    else
-      snprintf(unit_text,sizeof(unit_text),"lbs");
-    if(getOutput()==0)
-      snprintf(output_text,sizeof(output_text),"%%o");
-    else
-      snprintf(output_text,sizeof(output_text),"%%");
     
     snprintf(ebac_text,sizeof(ebac_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-             output_text,
-             getSex()==0? "M":"F",(int)getWeight(),unit_text);
+             getOutput()==0?"%o":"%",
+             getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");
     text_layer_set_text(header_text_layer,ebac_text);
   }
 }
@@ -290,7 +268,7 @@ static void window_load(Window *me) {
   text_layer_set_font(header_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_background_color(header_text_layer, GColorClear);
   text_layer_set_text_alignment(header_text_layer,GTextAlignmentCenter);
-  text_layer_set_text(header_text_layer, "Drink Counter");
+  //text_layer_set_text(header_text_layer, "Drink Counter");
   layer_add_child(layer, text_layer_get_layer(header_text_layer));
 
   int grid_size_v = width/3;
@@ -300,10 +278,11 @@ static void window_load(Window *me) {
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   
-  createDrink(&drinks[0], scroll_layer, RESOURCE_ID_IMAGE_BEER, 0, grid_size_v);
-  createDrink(&drinks[1], scroll_layer, RESOURCE_ID_IMAGE_WINE, grid_size_v, grid_size_v);
-  createDrink(&drinks[2], scroll_layer, RESOURCE_ID_IMAGE_COCKTAIL, 2*grid_size_v, grid_size_v);
-  createDrink(&drinks[3], scroll_layer, RESOURCE_ID_IMAGE_SHOT, 3*grid_size_v, grid_size_v);
+  uint32_t ressources[4] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT};
+  unsigned char storage_slots[4] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY};
+  
+  for(int i=0;i<4;i++)
+    createDrink(&drinks[i], scroll_layer, ressources[i], storage_slots[i], i*grid_size_v, grid_size_v);
   
   action_bar_layer_add_to_window(action_bar, me);
   light_enable(true);
@@ -316,8 +295,7 @@ static void window_load(Window *me) {
 static void window_unload(Window *window) {
   text_layer_destroy(header_text_layer);
   
-  int i=0;
-  for (i=0;i<4; i++) {
+  for (int i=0;i<4; i++) {
     destroyDrink(&drinks[i]);
   }
 
@@ -354,10 +332,6 @@ static void init(void) {
   window_set_status_bar_icon(window,status_icon_bitmap);
 
   // Get the count from persistent storage for use if it exists, otherwise use the default
-  drinks[0].num_drinks = persist_exists(NUM_BEERS_PKEY) ? persist_read_int(NUM_BEERS_PKEY) : NUM_DRINKS_DEFAULT;
-  drinks[1].num_drinks = persist_exists(NUM_WINE_PKEY) ? persist_read_int(NUM_WINE_PKEY) : NUM_DRINKS_DEFAULT;
-  drinks[2].num_drinks = persist_exists(NUM_COCKTAILS_PKEY) ? persist_read_int(NUM_COCKTAILS_PKEY) : NUM_DRINKS_DEFAULT;
-  drinks[3].num_drinks = persist_exists(NUM_SHOTS_PKEY) ? persist_read_int(NUM_SHOTS_PKEY) : NUM_DRINKS_DEFAULT;
   if(persist_exists(LAST_DRINK_TIME))
   {
     persist_read_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
@@ -372,10 +346,6 @@ static void init(void) {
 static void deinit(void) {
 
   // Save the count into persistent storage on app exit
-  persist_write_int(NUM_BEERS_PKEY, drinks[0].num_drinks);
-  persist_write_int(NUM_WINE_PKEY, drinks[1].num_drinks);
-  persist_write_int(NUM_COCKTAILS_PKEY, drinks[2].num_drinks);
-  persist_write_int(NUM_SHOTS_PKEY, drinks[3].num_drinks);
   persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
   
   tick_timer_service_unsubscribe();

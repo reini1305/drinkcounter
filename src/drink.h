@@ -17,10 +17,21 @@ typedef struct Drink{
   InverterLayer* inverter_layer;
   TextLayer* text_layer;
   int num_drinks;
+  unsigned char storage_slot;
   char text[3];
 }Drink;
 
-void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, int position_x, int grid_size_v)
+void loadDrink(Drink *drink)
+{
+  drink->num_drinks = persist_exists(drink->storage_slot) ? persist_read_int(drink->storage_slot) : 0;
+}
+
+void saveDrink(Drink *drink)
+{
+  persist_write_int(drink->storage_slot, drink->num_drinks);
+}
+
+void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned char storage_id, int position_x, int grid_size_v)
 {
   int text_y = 50;
   int text_height = 100;
@@ -40,10 +51,13 @@ void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, int posi
   drink->inverter_layer = inverter_layer_create(GRect(position_x, text_y, grid_size_v, text_height));
   layer_set_hidden(inverter_layer_get_layer(drink->inverter_layer),true);
   layer_add_child(parent_layer,inverter_layer_get_layer(drink->inverter_layer));
+  drink->storage_slot = storage_id;
+  loadDrink(drink);
 }
 
 void destroyDrink(Drink *drink)
 {
+  saveDrink(drink);
   text_layer_destroy(drink->text_layer);
   inverter_layer_destroy(drink->inverter_layer);
   bitmap_layer_destroy(drink->bitmap_layer);
