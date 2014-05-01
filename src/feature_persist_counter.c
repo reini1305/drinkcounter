@@ -19,6 +19,7 @@
 static Window *window;
 
 static Drink drinks[4];
+static float sum_drinks=0;
 
 static GBitmap *action_icon_plus;
 static GBitmap *action_icon_reset;
@@ -68,8 +69,32 @@ static void animate_layer_bounds(Layer* layer, GRect toRect)
   animation_schedule((Animation*)animation);
 }
 
-static float get_ebac(unsigned int time_diff, float sum_drinks)
+static float get_ebac()
 {
+  sum_drinks=0;
+  for (int i=0; i<4; i++)
+  {
+    sum_drinks+=drinks[i].num_drinks;
+  }
+  // We started drinking
+  if(sum_drinks==1)
+    last_drink_time = current_time;
+  
+  int day1 = current_time.tm_yday;
+  int hour1 = current_time.tm_hour;
+  int min1 = current_time.tm_min;
+  long int combine1 = min1+hour1*60+day1*24*60;
+  
+  int day2 = last_drink_time.tm_yday;
+  int hour2 = last_drink_time.tm_hour;
+  int min2 = last_drink_time.tm_min;
+  long int combine2 = min2+hour2*60+day2*24*60;
+  
+  unsigned int time_diff = abs(combine1 - combine2);
+
+  if(getSize())
+    sum_drinks+=drinks[0].num_drinks/0.33*0.5-drinks[0].num_drinks;
+  
   float bw = getSex()==0 ? 0.58f:0.49f;
   float scale_factor = getUnit()==0? 1.0f:0.453592f; // 0 = kg, 1 = pounds
   float multiplication = getOutput()==0? 10.f:1.f; //0 = %o, 1 = %
@@ -82,35 +107,18 @@ static float max(float val1,float val2)
 }
 
 static void update_text() {
-
-  int day1 = current_time.tm_yday;
-  int hour1 = current_time.tm_hour;
-  int min1 = current_time.tm_min;
-  long int combine1 = min1+hour1*60+day1*24*60;
-  
-  int day2 = last_drink_time.tm_yday;
-  int hour2 = last_drink_time.tm_hour;
-  int min2 = last_drink_time.tm_min;
-  long int combine2 = min2+hour2*60+day2*24*60;
-  
-  unsigned int diff = abs(combine1 - combine2);
-  float sumdrinks=0;
-  
   for (int i=0; i<4; i++)
   {
-    sumdrinks+=drinks[i].num_drinks;
     redrawText(&drinks[i]);
   }
-  if(getSize())
-  sumdrinks+=drinks[0].num_drinks/0.33*0.5-drinks[0].num_drinks;
   
-  if(sumdrinks<1.0f || getEbac()==false)
+  float ebac = max(get_ebac(),0.0f);
+  
+  if(sum_drinks<1.0f || getEbac()==false)
     text_layer_set_text(header_text_layer,"Drink Counter");
   else
   {
     static char ebac_text[30];
-    // Estimate BAC regarding formula on wikipedia
-    float ebac = max(get_ebac(diff,sumdrinks),0.0f);
     
     snprintf(ebac_text,sizeof(ebac_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
              getOutput()==0?"%o":"%",
@@ -158,21 +166,6 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   update_text();
 }
 
-static void increment_click_handler(ClickRecognizerRef recognizer, void *context) {
-  light_enable(true);
-  if(!app_timer_reschedule(light_timer,10000))
-    light_timer = app_timer_register(10000,light_off,NULL);
-  increaseCounter(&drinks[current_drink]);
-  int sumdrinks=0;
-  for (int i=0; i<4; i++)
-  {
-    sumdrinks+=drinks[i].num_drinks;
-  }
-  if(sumdrinks==1)
-    last_drink_time = current_time;
-  update_text();
-}
-
 static void reset_counters(Window *me)
 {
   text_layer_destroy(conf_text_layer);
@@ -180,10 +173,23 @@ static void reset_counters(Window *me)
   if(reset)
   {
     for (int i=0;i<4;i++)
-    resetCounter(&drinks[i]);
-    last_drink_time=current_time;
+      resetCounter(&drinks[i]);
     update_text();
   }
+}
+
+static void increment_click_handler(ClickRecognizerRef recognizer, void *context) {
+  light_enable(true);
+  if(!app_timer_reschedule(light_timer,10000))
+    light_timer = app_timer_register(10000,light_off,NULL);
+  if(get_ebac()<0.f)
+  {
+    reset=true;
+    reset_counters(NULL);
+  }
+  
+  increaseCounter(&drinks[current_drink]);
+  update_text();
 }
 
 static void conf_select_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -215,11 +221,11 @@ static void dialog_load(Window *me)
   Layer *layer = window_get_root_layer(me);
   const int16_t width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
   
-  conf_text_layer = text_layer_create(GRect(4, 0, width, 160));
-  text_layer_set_font(conf_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  conf_text_layer = text_layer_create(GRect(4, 20, width, 160));
+  text_layer_set_font(conf_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
   text_layer_set_background_color(conf_text_layer, GColorClear);
   text_layer_set_text_alignment(conf_text_layer,GTextAlignmentCenter);
-  text_layer_set_text(conf_text_layer, "Are you sure?");
+  text_layer_set_text(conf_text_layer, "Do you want to reset?");
   layer_add_child(layer, text_layer_get_layer(conf_text_layer));
   reset = false;
 }
