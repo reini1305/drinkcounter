@@ -76,9 +76,6 @@ static float get_ebac()
   {
     sum_drinks+=drinks[i].num_drinks;
   }
-  // We started drinking
-  if(sum_drinks==1)
-    last_drink_time = current_time;
   
   int day1 = current_time.tm_yday;
   int hour1 = current_time.tm_hour;
@@ -182,10 +179,19 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
   light_enable(true);
   if(!app_timer_reschedule(light_timer,10000))
     light_timer = app_timer_register(10000,light_off,NULL);
+  sum_drinks=0;
+  for (int i=0; i<4; i++)
+  {
+    sum_drinks+=drinks[i].num_drinks;
+  }
+  // We started drinking
+  if(sum_drinks<1.01f)
+    last_drink_time = current_time;
   if(get_ebac()<0.f)
   {
-    reset=true;
-    reset_counters(NULL);
+    for (int i=0;i<4;i++)
+      resetCounter(&drinks[i]);
+    last_drink_time = current_time;
   }
   
   increaseCounter(&drinks[current_drink]);
