@@ -11,6 +11,7 @@
 #define NUM_COCKTAILS_PKEY 3
 #define NUM_SHOTS_PKEY 5
 #define LAST_DRINK_TIME 4
+#define FIRST_DRINK_TIME 12 // 6 to 11 are used for config!
 
 // You can define defaults for values in persistent storage
 #define NUM_DRINKS_DEFAULT 0
@@ -47,6 +48,7 @@ static bool reset = false;
 
 // We'll save the count in memory from persistent storage
 static struct tm last_drink_time;
+static struct tm first_drink_time;
 static struct tm current_time;
 
 static int current_drink = 0;
@@ -82,9 +84,9 @@ static float get_ebac()
   int min1 = current_time.tm_min;
   long int combine1 = min1+hour1*60+day1*24*60;
   
-  int day2 = last_drink_time.tm_yday;
-  int hour2 = last_drink_time.tm_hour;
-  int min2 = last_drink_time.tm_min;
+  int day2 = first_drink_time.tm_yday;
+  int hour2 = first_drink_time.tm_hour;
+  int min2 = first_drink_time.tm_min;
   long int combine2 = min2+hour2*60+day2*24*60;
   
   unsigned int time_diff = abs(combine1 - combine2);
@@ -104,24 +106,40 @@ static float max(float val1,float val2)
 }
 
 static void update_text() {
+  static char output_text[35];
+  
   for (int i=0; i<4; i++)
   {
     redrawText(&drinks[i]);
   }
-  
   float ebac = max(get_ebac(),0.0f);
-  
-  if(sum_drinks<1.0f || getEbac()==false)
+  if(sum_drinks<1.0f)
     text_layer_set_text(header_text_layer,"Drink Counter");
-  else
-  {
-    static char ebac_text[30];
-    
-    snprintf(ebac_text,sizeof(ebac_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-             getOutput()==0?"%o":"%",
-             getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");
-    text_layer_set_text(header_text_layer,ebac_text);
-  }
+  else if (getEbac()==false)
+    {
+      int day1 = current_time.tm_yday;
+      int hour1 = current_time.tm_hour;
+      int min1 = current_time.tm_min;
+      long int combine1 = min1+hour1*60+day1*24*60;
+      
+      int day2 = last_drink_time.tm_yday;
+      int hour2 = last_drink_time.tm_hour;
+      int min2 = last_drink_time.tm_min;
+      long int combine2 = min2+hour2*60+day2*24*60;
+      
+      unsigned int time_diff = abs(combine1 - combine2);
+      
+      snprintf(output_text, sizeof(output_text), "Time since last drink: %d %s",time_diff>60?time_diff/60:time_diff,
+               time_diff>60?"hour(s)":"min(s)");
+      text_layer_set_text(header_text_layer,output_text);
+    }
+    else
+    {
+      snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+               getOutput()==0? "‰":"%",
+               getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");
+      text_layer_set_text(header_text_layer,output_text);
+    }
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
@@ -186,14 +204,14 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
   }
   // We started drinking
   if(sum_drinks<1.01f)
-    last_drink_time = current_time;
-  if(get_ebac()<0.f)
+    first_drink_time = current_time;
+  /*if(get_ebac()<0.f)
   {
     for (int i=0;i<4;i++)
       resetCounter(&drinks[i]);
     last_drink_time = current_time;
-  }
-  
+  }*/
+  last_drink_time = current_time;
   increaseCounter(&drinks[current_drink]);
   update_text();
 }
@@ -352,6 +370,14 @@ static void init(void) {
   {
     last_drink_time = current_time;
   }
+  if(persist_exists(FIRST_DRINK_TIME))
+  {
+    persist_read_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
+  }
+  else
+  {
+    first_drink_time = current_time;
+  }
   window_stack_push(window, true /* Animated */);
 }
 
@@ -359,6 +385,7 @@ static void deinit(void) {
 
   // Save the count into persistent storage on app exit
   persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
+  persist_write_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
   
   tick_timer_service_unsubscribe();
   
