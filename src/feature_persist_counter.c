@@ -58,6 +58,13 @@ static void light_off(void *data)
   light_enable(false);
 }
 
+static void light_on(void)
+{
+  light_enable(true);
+  if(!app_timer_reschedule(light_timer,10000))
+    light_timer = app_timer_register(10000,light_off,NULL);
+}
+
 static void animation_stopped(PropertyAnimation *animation, bool finished, void *data) {
   property_animation_destroy(animation);
 }
@@ -194,9 +201,7 @@ static void reset_counters(Window *me)
 }
 
 static void increment_click_handler(ClickRecognizerRef recognizer, void *context) {
-  light_enable(true);
-  if(!app_timer_reschedule(light_timer,10000))
-    light_timer = app_timer_register(10000,light_off,NULL);
+  light_on();
   sum_drinks=0;
   for (int i=0; i<4; i++)
   {
@@ -205,12 +210,7 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
   // We started drinking
   if(sum_drinks<1.01f)
     first_drink_time = current_time;
-  /*if(get_ebac()<0.f)
-  {
-    for (int i=0;i<4;i++)
-      resetCounter(&drinks[i]);
-    last_drink_time = current_time;
-  }*/
+
   last_drink_time = current_time;
   increaseCounter(&drinks[current_drink]);
   update_text();
@@ -255,16 +255,12 @@ static void dialog_load(Window *me)
 }
 
 static void reset_click_handler(ClickRecognizerRef recognizer, void *context) {
-  light_enable(true);
-  if(!app_timer_reschedule(light_timer,10000))
-    light_timer = app_timer_register(10000,light_off,NULL);
+  light_on();
   window_stack_push(conf_dialog,true);
 }
 
 static void right_click_handler(ClickRecognizerRef recognizer, void *context) {
-  light_enable(true);
-  if(!app_timer_reschedule(light_timer,10000))
-    light_timer = app_timer_register(10000,light_off,NULL);
+  light_on();
   current_drink++;
   if (current_drink>3) {
     current_drink=0;
@@ -308,6 +304,16 @@ static void window_load(Window *me) {
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   
+  // Get the count from persistent storage for use if it exists, otherwise use the default
+  if(persist_exists(LAST_DRINK_TIME))
+    persist_read_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
+  else
+    last_drink_time = current_time;
+  if(persist_exists(FIRST_DRINK_TIME))
+    persist_read_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
+  else
+    first_drink_time = current_time;
+  
   uint32_t ressources[4] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT};
   unsigned char storage_slots[4] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY};
   
@@ -315,19 +321,13 @@ static void window_load(Window *me) {
     createDrink(&drinks[i], scroll_layer, ressources[i], storage_slots[i], i*grid_size_v, grid_size_v);
   
   action_bar_layer_add_to_window(action_bar, me);
-  light_enable(true);
-  if(!app_timer_reschedule(light_timer,10000))
-    light_timer = app_timer_register(10000,light_off,NULL);
+  light_on();
   update_text();
   update_selection();
 }
 
 static void window_unload(Window *window) {
   text_layer_destroy(header_text_layer);
-  
-  for (int i=0;i<4; i++) {
-    destroyDrink(&drinks[i]);
-  }
 
   action_bar_layer_destroy(action_bar);
   layer_destroy(scroll_layer);
@@ -361,31 +361,10 @@ static void init(void) {
   status_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_STATUS_ICON);
   window_set_status_bar_icon(window,status_icon_bitmap);
 
-  // Get the count from persistent storage for use if it exists, otherwise use the default
-  if(persist_exists(LAST_DRINK_TIME))
-  {
-    persist_read_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
-  }
-  else
-  {
-    last_drink_time = current_time;
-  }
-  if(persist_exists(FIRST_DRINK_TIME))
-  {
-    persist_read_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
-  }
-  else
-  {
-    first_drink_time = current_time;
-  }
   window_stack_push(window, true /* Animated */);
 }
 
 static void deinit(void) {
-
-  // Save the count into persistent storage on app exit
-  persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
-  persist_write_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
   
   tick_timer_service_unsubscribe();
   
@@ -398,6 +377,13 @@ static void deinit(void) {
   gbitmap_destroy(status_icon_bitmap);
   gbitmap_destroy(action_icon_cancel);
   gbitmap_destroy(action_icon_confirm);
+  
+  for (int i=0;i<4; i++) {
+    destroyDrink(&drinks[i]);
+  }
+  // Save the count into persistent storage on app exit
+  persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
+  persist_write_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
   autoconfig_deinit();
 }
 
