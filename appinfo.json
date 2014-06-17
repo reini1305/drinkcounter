@@ -3,8 +3,8 @@
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 22,
-  "versionLabel": "5.3.6",
+  "versionCode": 26,
+  "versionLabel": "5.5.1",
   "watchapp": {
     "watchface": false
   },
@@ -136,6 +136,11 @@
               "type": "png",
               "name": "IMAGE_SHOT",
               "file": "images/shot.png"
+              },
+              {
+              "type": "png",
+              "name": "IMAGE_CIGARETTE",
+              "file": "images/smoking.png"
               },
               {
               "characterRegex": "[0-9]",

@@ -12,6 +12,7 @@
 #define NUM_SHOTS_PKEY 5
 #define LAST_DRINK_TIME 4
 #define FIRST_DRINK_TIME 12 // 6 to 11 are used for config!
+#define NUM_CIGARETTES_PKEY 13
 
 // You can define defaults for values in persistent storage
 #define NUM_DRINKS_DEFAULT 0
@@ -19,7 +20,7 @@
 // Main Window
 static Window *window;
 
-static Drink drinks[4];
+static Drink drinks[5];
 static float sum_drinks=0;
 
 static GBitmap *action_icon_plus;
@@ -115,7 +116,7 @@ static float max(float val1,float val2)
 static void update_text() {
   static char output_text[35];
   
-  for (int i=0; i<4; i++)
+  for (int i=0; i<5; i++)
   {
     redrawText(&drinks[i]);
   }
@@ -158,9 +159,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 static void update_selection() {
   switch (current_drink) {
     case 0:
-      deselectDrink(&drinks[3]);
+      deselectDrink(&drinks[4]);
       selectDrink(&drinks[0]);
-      animate_layer_bounds(scroll_layer,GRect(3,64,4/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3,64,5/3*width,100));
     break;
     case 1:
       deselectDrink(&drinks[0]);
@@ -169,12 +170,17 @@ static void update_selection() {
     case 2:
       deselectDrink(&drinks[1]);
       selectDrink(&drinks[2]);
-      animate_layer_bounds(scroll_layer,GRect(3-width/3,64,4/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3-width/3,64,5/3*width,100));
     break;
     case 3:
       deselectDrink(&drinks[2]);
       selectDrink(&drinks[3]);
+      animate_layer_bounds(scroll_layer,GRect(3-2*width/3,64,5/3*width,100));
       break;
+    case 4:
+      deselectDrink(&drinks[3]);
+      selectDrink(&drinks[4]);
+    break;
     default:
     break;
   }
@@ -194,7 +200,7 @@ static void reset_counters(Window *me)
   action_bar_layer_destroy(conf_action_bar);
   if(reset)
   {
-    for (int i=0;i<4;i++)
+    for (int i=0;i<5;i++)
       resetCounter(&drinks[i]);
     update_text();
   }
@@ -208,10 +214,10 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
     sum_drinks+=drinks[i].num_drinks;
   }
   // We started drinking
-  if(sum_drinks<1.01f)
+  if(sum_drinks<1.0f)
     first_drink_time = current_time;
-
-  last_drink_time = current_time;
+  if(current_drink!=4) // cigarette is no drink
+    last_drink_time = current_time;
   increaseCounter(&drinks[current_drink]);
   update_text();
 }
@@ -259,20 +265,28 @@ static void reset_click_handler(ClickRecognizerRef recognizer, void *context) {
   window_stack_push(conf_dialog,true);
 }
 
+static void immediate_reset_click_handler(ClickRecognizerRef recognizer, void *context) {
+  light_on();
+  for (int i=0;i<5;i++)
+    resetCounter(&drinks[i]);
+  update_text();
+}
+
+
 static void right_click_handler(ClickRecognizerRef recognizer, void *context) {
   light_on();
   current_drink++;
-  if (current_drink>3) {
+  if (current_drink>4) {
     current_drink=0;
   }
   update_selection();
 }
 
 static void click_config_provider(void *context) {
-  const uint16_t repeat_interval_ms = 1000;
-  window_single_repeating_click_subscribe(BUTTON_ID_UP, repeat_interval_ms, (ClickHandler) reset_click_handler);
-  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, repeat_interval_ms, (ClickHandler) right_click_handler);
-  window_single_repeating_click_subscribe(BUTTON_ID_SELECT, repeat_interval_ms, (ClickHandler) increment_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) reset_click_handler);
+  window_long_click_subscribe(BUTTON_ID_UP,1000,(ClickHandler) immediate_reset_click_handler,NULL);
+  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) right_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) increment_click_handler);
 }
 
 static void window_load(Window *me) {
@@ -300,7 +314,7 @@ static void window_load(Window *me) {
   int grid_size_v = width/3;
   
   layer_set_clips(layer,false);
-  scroll_layer = layer_create(GRect(3,64,4/3*width,100));
+  scroll_layer = layer_create(GRect(3,64,5/3*width,100));
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   
@@ -314,10 +328,10 @@ static void window_load(Window *me) {
   else
     first_drink_time = current_time;
   
-  uint32_t ressources[4] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT};
-  unsigned char storage_slots[4] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY};
+  uint32_t ressources[5] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT,RESOURCE_ID_IMAGE_CIGARETTE};
+  unsigned char storage_slots[5] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY,NUM_CIGARETTES_PKEY};
   
-  for(int i=0;i<4;i++)
+  for(int i=0;i<5;i++)
     createDrink(&drinks[i], scroll_layer, ressources[i], storage_slots[i], i*grid_size_v, grid_size_v);
   
   action_bar_layer_add_to_window(action_bar, me);
@@ -378,7 +392,7 @@ static void deinit(void) {
   gbitmap_destroy(action_icon_cancel);
   gbitmap_destroy(action_icon_confirm);
   
-  for (int i=0;i<4; i++) {
+  for (int i=0;i<5; i++) {
     destroyDrink(&drinks[i]);
   }
   // Save the count into persistent storage on app exit
