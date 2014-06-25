@@ -284,10 +284,29 @@ static void right_click_handler(ClickRecognizerRef recognizer, void *context) {
   update_selection();
 }
 
+static void move_right_click_handler(ClickRecognizerRef recognizer, void *context) {
+  light_on();
+  
+  // Swap current drink with the next drink
+  unsigned char next_drink = current_drink+1;
+  if (next_drink>4) {
+    next_drink=0;
+  }
+  swapDrinks(&drinks[drawing_order[current_drink]], &drinks[drawing_order[next_drink]]);
+  unsigned char temp = drawing_order[current_drink];
+  drawing_order[current_drink] = drawing_order[next_drink];
+  drawing_order[next_drink] = temp;
+  
+  current_drink = next_drink;
+  
+  update_selection();
+}
+
 static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) reset_click_handler);
   window_long_click_subscribe(BUTTON_ID_UP,1000,(ClickHandler) immediate_reset_click_handler,NULL);
   window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) right_click_handler);
+  window_long_click_subscribe(BUTTON_ID_DOWN, 1000, (ClickHandler) move_right_click_handler,NULL);
   window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) increment_click_handler);
 }
 
