@@ -13,6 +13,7 @@
 #define LAST_DRINK_TIME 4
 #define FIRST_DRINK_TIME 12 // 6 to 11 are used for config!
 #define NUM_CIGARETTES_PKEY 13
+#define DRAWING_ORDER_PKEY 14
 
 // You can define defaults for values in persistent storage
 #define NUM_DRINKS_DEFAULT 0
@@ -21,6 +22,7 @@
 static Window *window;
 
 static Drink drinks[5];
+static unsigned char drawing_order[5]={4,3,2,1,0};
 static float sum_drinks=0;
 
 static GBitmap *action_icon_plus;
@@ -159,27 +161,27 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 static void update_selection() {
   switch (current_drink) {
     case 0:
-      deselectDrink(&drinks[4]);
-      selectDrink(&drinks[0]);
+      deselectDrink(&drinks[drawing_order[4]]);
+      selectDrink(&drinks[drawing_order[0]]);
       animate_layer_bounds(scroll_layer,GRect(3,64,5/3*width,100));
     break;
     case 1:
-      deselectDrink(&drinks[0]);
-      selectDrink(&drinks[1]);
+      deselectDrink(&drinks[drawing_order[0]]);
+      selectDrink(&drinks[drawing_order[1]]);
     break;
     case 2:
-      deselectDrink(&drinks[1]);
-      selectDrink(&drinks[2]);
+      deselectDrink(&drinks[drawing_order[1]]);
+      selectDrink(&drinks[drawing_order[2]]);
       animate_layer_bounds(scroll_layer,GRect(3-width/3,64,5/3*width,100));
     break;
     case 3:
-      deselectDrink(&drinks[2]);
-      selectDrink(&drinks[3]);
+      deselectDrink(&drinks[drawing_order[2]]);
+      selectDrink(&drinks[drawing_order[3]]);
       animate_layer_bounds(scroll_layer,GRect(3-2*width/3,64,5/3*width,100));
       break;
     case 4:
-      deselectDrink(&drinks[3]);
-      selectDrink(&drinks[4]);
+      deselectDrink(&drinks[drawing_order[3]]);
+      selectDrink(&drinks[drawing_order[4]]);
     break;
     default:
     break;
@@ -218,7 +220,7 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
     first_drink_time = current_time;
   if(current_drink!=4) // cigarette is no drink
     last_drink_time = current_time;
-  increaseCounter(&drinks[current_drink]);
+  increaseCounter(&drinks[drawing_order[current_drink]]);
   update_text();
 }
 
@@ -289,6 +291,12 @@ static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) increment_click_handler);
 }
 
+static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
+  // Process tap on ACCEL_AXIS_X, ACCEL_AXIS_Y or ACCEL_AXIS_Z
+  // Direction is 1 or -1
+  light_on();
+}
+
 static void window_load(Window *me) {
   action_bar = action_bar_layer_create();
   
@@ -318,21 +326,11 @@ static void window_load(Window *me) {
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   
-  // Get the count from persistent storage for use if it exists, otherwise use the default
-  if(persist_exists(LAST_DRINK_TIME))
-    persist_read_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
-  else
-    last_drink_time = current_time;
-  if(persist_exists(FIRST_DRINK_TIME))
-    persist_read_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
-  else
-    first_drink_time = current_time;
-  
   uint32_t ressources[5] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT,RESOURCE_ID_IMAGE_CIGARETTE};
   unsigned char storage_slots[5] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY,NUM_CIGARETTES_PKEY};
   
   for(int i=0;i<5;i++)
-    createDrink(&drinks[i], scroll_layer, ressources[i], storage_slots[i], i*grid_size_v, grid_size_v);
+    createDrink(&drinks[i], scroll_layer, ressources[i], storage_slots[i], drawing_order[i], grid_size_v);
   
   action_bar_layer_add_to_window(action_bar, me);
   light_on();
@@ -359,6 +357,20 @@ static void init(void) {
   action_icon_confirm = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CHECK);
   
   light_timer = app_timer_register(10000,light_off,NULL);
+  
+  accel_tap_service_subscribe(&accel_tap_handler);
+  
+  // Get the count from persistent storage for use if it exists, otherwise use the default
+  if(persist_exists(LAST_DRINK_TIME))
+    persist_read_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
+  else
+    last_drink_time = current_time;
+  if(persist_exists(FIRST_DRINK_TIME))
+    persist_read_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
+  else
+    first_drink_time = current_time;
+  if(persist_exists(DRAWING_ORDER_PKEY))
+    persist_read_data(DRAWING_ORDER_PKEY,drawing_order,5*sizeof(unsigned char));
 
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
@@ -381,6 +393,7 @@ static void init(void) {
 static void deinit(void) {
   
   tick_timer_service_unsubscribe();
+  accel_tap_service_unsubscribe();
   
   window_destroy(window);
   window_destroy(conf_dialog);
@@ -398,6 +411,7 @@ static void deinit(void) {
   // Save the count into persistent storage on app exit
   persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
   persist_write_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
+  persist_write_data(DRAWING_ORDER_PKEY,drawing_order,sizeof(unsigned char)*5);
   autoconfig_deinit();
 }
 

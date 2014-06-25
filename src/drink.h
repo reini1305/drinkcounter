@@ -18,6 +18,8 @@ typedef struct Drink{
   TextLayer* text_layer;
   int num_drinks;
   unsigned char storage_slot;
+  unsigned char draw_slot;
+  unsigned char width;
   char text[3];
   GFont font;
 }Drink;
@@ -32,12 +34,12 @@ void saveDrink(Drink *drink)
   persist_write_int(drink->storage_slot, drink->num_drinks);
 }
 
-void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned char storage_id, int position_x, int grid_size_v)
+void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned char storage_id, int draw_slot, int grid_size_v)
 {
   int text_y = 50;
   int text_height = 100;
   
-  drink->text_layer = text_layer_create(GRect(position_x, text_y, grid_size_v, text_height));
+  drink->text_layer = text_layer_create(GRect(draw_slot*grid_size_v, text_y, grid_size_v, text_height));
   drink->font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_30));
   text_layer_set_font(drink->text_layer, drink->font);
   //text_layer_set_font(drink->text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
@@ -46,15 +48,17 @@ void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned
   layer_add_child(parent_layer, text_layer_get_layer(drink->text_layer));
   
   drink->bitmap = gbitmap_create_with_resource(bitmap_id);
-  drink->bitmap_layer = bitmap_layer_create(GRect(position_x, 0, grid_size_v, 40));
+  drink->bitmap_layer = bitmap_layer_create(GRect(draw_slot*grid_size_v, 0, grid_size_v, 40));
   bitmap_layer_set_alignment(drink->bitmap_layer,GAlignCenter);
   bitmap_layer_set_bitmap(drink->bitmap_layer,drink->bitmap);
   layer_add_child(parent_layer,bitmap_layer_get_layer(drink->bitmap_layer));
   
-  drink->inverter_layer = inverter_layer_create(GRect(position_x, text_y, grid_size_v, text_height));
+  drink->inverter_layer = inverter_layer_create(GRect(draw_slot*grid_size_v, text_y, grid_size_v, text_height));
   layer_set_hidden(inverter_layer_get_layer(drink->inverter_layer),true);
   layer_add_child(parent_layer,inverter_layer_get_layer(drink->inverter_layer));
   drink->storage_slot = storage_id;
+  drink->draw_slot=draw_slot;
+  drink->width=grid_size_v;
   loadDrink(drink);
 }
 
@@ -67,10 +71,12 @@ void destroyDrink(Drink *drink)
   bitmap_layer_destroy(drink->bitmap_layer);
   gbitmap_destroy(drink->bitmap);
 }
+
 void selectDrink(Drink* drink)
 {
   layer_set_hidden(inverter_layer_get_layer(drink->inverter_layer),false);
 }
+
 void deselectDrink(Drink* drink)
 {
   layer_set_hidden(inverter_layer_get_layer(drink->inverter_layer),true);
@@ -78,8 +84,16 @@ void deselectDrink(Drink* drink)
 
 void redrawText(Drink* drink)
 {
+  int text_y = 50;
+  int text_height = 100;
+  
   snprintf(drink->text, sizeof(drink->text), "%u", drink->num_drinks);
   text_layer_set_text(drink->text_layer, drink->text);
+  
+  // Move layers to the correct position
+  layer_set_frame(text_layer_get_layer(drink->text_layer),GRect(drink->draw_slot*drink->width, text_y, drink->width, text_height));
+  layer_set_frame(bitmap_layer_get_layer(drink->bitmap_layer),GRect(drink->draw_slot*drink->width, 0, drink->width, 40));
+  layer_set_frame(inverter_layer_get_layer(drink->inverter_layer),GRect(drink->draw_slot*drink->width, text_y, drink->width, text_height));
 }
 void increaseCounter(Drink* drink)
 {
@@ -91,7 +105,14 @@ void resetCounter(Drink* drink)
   drink->num_drinks=0;
   redrawText(drink);
 }
-
+void swapDrinks(Drink* drink1, Drink* drink2)
+{
+  unsigned char temp = drink1->draw_slot;
+  drink1->draw_slot=drink2->draw_slot;
+  drink2->draw_slot=temp;
+  redrawText(drink1);
+  redrawText(drink2);
+}
 
 
 #endif
