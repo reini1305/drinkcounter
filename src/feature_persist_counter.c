@@ -14,6 +14,8 @@
 #define FIRST_DRINK_TIME 12 // 6 to 11 are used for config!
 #define NUM_CIGARETTES_PKEY 13
 #define DRAWING_ORDER_PKEY 14
+#define LAT_KEY 15
+#define LON_KEY 16
 
 // You can define defaults for values in persistent storage
 #define NUM_DRINKS_DEFAULT 0
@@ -22,7 +24,7 @@
 static Window *window;
 
 static Drink drinks[5];
-static unsigned char drawing_order[5]={4,3,2,1,0};
+static unsigned char drawing_order[5]={0,1,2,3,4};
 static float sum_drinks=0;
 
 static GBitmap *action_icon_plus;
@@ -55,6 +57,19 @@ static struct tm first_drink_time;
 static struct tm current_time;
 
 static int current_drink = 0;
+static int drink_meters = 0;
+
+static bool send_to_phone_multi(int quote_key, int symbol) {
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+  
+  Tuplet tuple = TupletInteger(quote_key, symbol);
+  dict_write_tuplet(iter, &tuple);
+  dict_write_end(iter);
+  
+  app_message_outbox_send();
+  return true;
+}
 
 static void light_off(void *data)
 {
@@ -145,16 +160,28 @@ static void update_text() {
     }
     else
     {
-      snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+      /*snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                getOutput()==0? "‰":"%",
-               getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");
+               getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");*/
+      snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%d m)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+               getOutput()==0? "‰":"%",drink_meters);
       text_layer_set_text(header_text_layer,output_text);
     }
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
   autoconfig_in_received_handler(iter, context);
-  
+  Tuple *lat_tuple = dict_find(iter, LAT_KEY);
+  if(lat_tuple)
+  {
+    APP_LOG(APP_LOG_LEVEL_DEBUG,"Latitude %d",(int)lat_tuple->value->int32);
+    drink_meters = drink_meters + lat_tuple->value->int32;
+  }
+  Tuple *lon_tuple = dict_find(iter, LON_KEY);
+  if(lon_tuple)
+  {
+    APP_LOG(APP_LOG_LEVEL_DEBUG,"Longitude %d",(int)lon_tuple->value->int32);
+  }
   update_text();
 }
 
@@ -202,6 +229,7 @@ static void reset_counters(Window *me)
   action_bar_layer_destroy(conf_action_bar);
   if(reset)
   {
+    drink_meters = 0;
     for (int i=0;i<5;i++)
       resetCounter(&drinks[i]);
     update_text();
@@ -219,7 +247,10 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
   if(sum_drinks<1.0f)
     first_drink_time = current_time;
   if(current_drink!=4) // cigarette is no drink
+  {
     last_drink_time = current_time;
+    send_to_phone_multi(1, 1); // get location
+  }
   increaseCounter(&drinks[drawing_order[current_drink]]);
   update_text();
 }
@@ -269,6 +300,7 @@ static void reset_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void immediate_reset_click_handler(ClickRecognizerRef recognizer, void *context) {
   light_on();
+  drink_meters = 0;
   for (int i=0;i<5;i++)
     resetCounter(&drinks[i]);
   update_text();
@@ -390,6 +422,8 @@ static void init(void) {
     first_drink_time = current_time;
   if(persist_exists(DRAWING_ORDER_PKEY))
     persist_read_data(DRAWING_ORDER_PKEY,drawing_order,5*sizeof(unsigned char));
+  if(persist_exists(LAT_KEY))
+    drink_meters=persist_read_int(LAT_KEY);
 
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
@@ -431,6 +465,7 @@ static void deinit(void) {
   persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
   persist_write_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
   persist_write_data(DRAWING_ORDER_PKEY,drawing_order,sizeof(unsigned char)*5);
+  persist_write_int(LAT_KEY,drink_meters);
   autoconfig_deinit();
 }
 

@@ -3,19 +3,21 @@
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 27,
-  "versionLabel": "5.5.2",
+  "versionCode": 29,
+  "versionLabel": "5.6.1",
   "watchapp": {
     "watchface": false
   },
-  "capabilities": [ "configurable" ],
+  "capabilities": [ "configurable","location" ],
   "appKeys": {
       "sex":6,
       "weight":7,
       "size":8,
       "unit":9,
       "output":10,
-      "ebac": 11
+      "ebac": 11,
+      "lat": 15,
+      "lon": 16
   },
   "preferences": {
     "embedded": false,
