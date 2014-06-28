@@ -3,8 +3,8 @@
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 29,
-  "versionLabel": "5.6.1",
+  "versionCode": 30,
+  "versionLabel": "5.7",
   "watchapp": {
     "watchface": false
   },
@@ -55,8 +55,8 @@
               "title": "Weight Unit",
               "type": "enum",
               "choices": {
-              "KG": "Kilograms",
-              "POUNDS": "Pounds"
+              "KG": "Kilograms/Kilometers",
+              "POUNDS": "Pounds/Miles"
               },
               "default": 0
               },

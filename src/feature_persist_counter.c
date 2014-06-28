@@ -25,7 +25,6 @@ static Window *window;
 
 static Drink drinks[5];
 static unsigned char drawing_order[5]={0,1,2,3,4};
-static float sum_drinks=0;
 
 static GBitmap *action_icon_plus;
 static GBitmap *action_icon_reset;
@@ -96,13 +95,19 @@ static void animate_layer_bounds(Layer* layer, GRect toRect)
   animation_schedule((Animation*)animation);
 }
 
-static float get_ebac()
+static float get_sum_drinks()
 {
-  sum_drinks=0;
+  float sum_drinks=0;
   for (int i=0; i<4; i++)
   {
     sum_drinks+=drinks[i].num_drinks;
   }
+  return sum_drinks;
+}
+
+static float get_ebac()
+{
+  float sum_drinks = get_sum_drinks();
   
   int day1 = current_time.tm_yday;
   int hour1 = current_time.tm_hour;
@@ -138,6 +143,7 @@ static void update_text() {
     redrawText(&drinks[i]);
   }
   float ebac = max(get_ebac(),0.0f);
+  float sum_drinks = get_sum_drinks();
   if(sum_drinks<1.0f)
     text_layer_set_text(header_text_layer,"Drink Counter");
   else if (getEbac()==false)
@@ -163,8 +169,13 @@ static void update_text() {
       /*snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                getOutput()==0? "‰":"%",
                getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");*/
-      snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%d m)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-               getOutput()==0? "‰":"%",drink_meters);
+      if(drink_meters>0)
+        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\nwalking %d.%02d%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+               getOutput()==0? "‰":"%",(int)(drink_meters*0.62/100),(int)(drink_meters*0.62),getUnit()==0?"km":"mi");
+      else
+        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+                 getOutput()==0? "‰":"%",
+                 getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");
       text_layer_set_text(header_text_layer,output_text);
     }
 }
@@ -174,13 +185,11 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *lat_tuple = dict_find(iter, LAT_KEY);
   if(lat_tuple)
   {
-    APP_LOG(APP_LOG_LEVEL_DEBUG,"Latitude %d",(int)lat_tuple->value->int32);
-    drink_meters = drink_meters + lat_tuple->value->int32;
-  }
-  Tuple *lon_tuple = dict_find(iter, LON_KEY);
-  if(lon_tuple)
-  {
-    APP_LOG(APP_LOG_LEVEL_DEBUG,"Longitude %d",(int)lon_tuple->value->int32);
+    float sum_drinks = get_sum_drinks();
+    if(sum_drinks<2)
+      drink_meters=0;
+    else
+      drink_meters = drink_meters + lat_tuple->value->int32;
   }
   update_text();
 }
@@ -238,11 +247,7 @@ static void reset_counters(Window *me)
 
 static void increment_click_handler(ClickRecognizerRef recognizer, void *context) {
   light_on();
-  sum_drinks=0;
-  for (int i=0; i<4; i++)
-  {
-    sum_drinks+=drinks[i].num_drinks;
-  }
+  float sum_drinks=get_sum_drinks();
   // We started drinking
   if(sum_drinks<1.0f)
     first_drink_time = current_time;
