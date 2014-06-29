@@ -189,7 +189,13 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     if(sum_drinks<2)
       drink_meters=0;
     else
-      drink_meters = drink_meters + lat_tuple->value->int32;
+    {
+      if(lat_tuple->value->int32 == -1)
+        drink_meters=0;
+      else
+        drink_meters = drink_meters + lat_tuple->value->int32;
+    }
+    
   }
   update_text();
 }
