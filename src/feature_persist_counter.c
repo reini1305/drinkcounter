@@ -1,30 +1,19 @@
 #include "pebble.h"
+#include "settings.h"
 # include <drink.h>
 #include "autoconfig.h"
 // TODOS:
 // Add configuration dialog
 // Make drink types 
 
-// This is a custom defined key for saving our count field
-#define NUM_BEERS_PKEY 1
-#define NUM_WINE_PKEY 2
-#define NUM_COCKTAILS_PKEY 3
-#define NUM_SHOTS_PKEY 5
-#define LAST_DRINK_TIME 4
-#define FIRST_DRINK_TIME 12 // 6 to 11 are used for config!
-#define NUM_CIGARETTES_PKEY 13
-#define DRAWING_ORDER_PKEY 14
-#define LAT_KEY 15
-#define LON_KEY 16
 
-// You can define defaults for values in persistent storage
-#define NUM_DRINKS_DEFAULT 0
 
 // Main Window
 static Window *window;
 
 static Drink drinks[5];
-static unsigned char drawing_order[5]={0,1,2,3,4};
+static Settings settings;
+//static unsigned char drawing_order[5]={0,1,2,3,4};
 
 static GBitmap *action_icon_plus;
 static GBitmap *action_icon_reset;
@@ -50,13 +39,8 @@ static GBitmap *action_icon_cancel;
 static GBitmap *action_icon_confirm;
 static bool reset = false;
 
-// We'll save the count in memory from persistent storage
-static struct tm last_drink_time;
-static struct tm first_drink_time;
-static struct tm current_time;
-
 static int current_drink = 0;
-static int drink_meters = 0;
+static struct tm current_time;
 
 static bool send_to_phone_multi(int quote_key, int symbol) {
   DictionaryIterator *iter;
@@ -100,7 +84,7 @@ static float get_sum_drinks()
   float sum_drinks=0;
   for (int i=0; i<4; i++)
   {
-    sum_drinks+=drinks[i].num_drinks;
+    sum_drinks+=*(drinks[i].num_drinks);
   }
   return sum_drinks;
 }
@@ -114,15 +98,15 @@ static float get_ebac()
   int min1 = current_time.tm_min;
   long int combine1 = min1+hour1*60+day1*24*60;
   
-  int day2 = first_drink_time.tm_yday;
-  int hour2 = first_drink_time.tm_hour;
-  int min2 = first_drink_time.tm_min;
+  int day2 = settings.first_drink_time.tm_yday;
+  int hour2 = settings.first_drink_time.tm_hour;
+  int min2 = settings.first_drink_time.tm_min;
   long int combine2 = min2+hour2*60+day2*24*60;
   
   unsigned int time_diff = abs(combine1 - combine2);
 
   if(getSize())
-    sum_drinks+=drinks[0].num_drinks/0.33*0.5-drinks[0].num_drinks;
+    sum_drinks+=*(drinks[0].num_drinks)/0.33*0.5-*(drinks[0].num_drinks);
   
   float bw = getSex()==0 ? 0.58f:0.49f;
   float scale_factor = getUnit()==0? 1.0f:0.453592f; // 0 = kg, 1 = pounds
@@ -153,9 +137,9 @@ static void update_text() {
       int min1 = current_time.tm_min;
       long int combine1 = min1+hour1*60+day1*24*60;
       
-      int day2 = last_drink_time.tm_yday;
-      int hour2 = last_drink_time.tm_hour;
-      int min2 = last_drink_time.tm_min;
+      int day2 = settings.last_drink_time.tm_yday;
+      int hour2 = settings.last_drink_time.tm_hour;
+      int min2 = settings.last_drink_time.tm_min;
       long int combine2 = min2+hour2*60+day2*24*60;
       
       unsigned int time_diff = abs(combine1 - combine2);
@@ -169,9 +153,9 @@ static void update_text() {
       /*snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                getOutput()==0? "‰":"%",
                getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");*/
-      if(drink_meters>0)
+      if(settings.drink_meters>0)
         snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\nwalking %d.%02d%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-               getOutput()==0? "‰":"%",(int)(drink_meters*0.62/100),(int)(drink_meters*0.62),getUnit()==0?"km":"mi");
+               getOutput()==0? "‰":"%",(int)(settings.drink_meters*0.62/100),(int)(settings.drink_meters*0.62),getUnit()==0?"km":"mi");
       else
         snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                  getOutput()==0? "‰":"%",
@@ -187,13 +171,13 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   {
     float sum_drinks = get_sum_drinks();
     if(sum_drinks<2)
-      drink_meters=0;
+      settings.drink_meters=0;
     else
     {
       if(lat_tuple->value->int32 == -1)
-        drink_meters=0;
+        settings.drink_meters=0;
       else
-        drink_meters = drink_meters + lat_tuple->value->int32;
+        settings.drink_meters = settings.drink_meters + lat_tuple->value->int32;
     }
     
   }
@@ -203,27 +187,27 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 static void update_selection() {
   switch (current_drink) {
     case 0:
-      deselectDrink(&drinks[drawing_order[4]]);
-      selectDrink(&drinks[drawing_order[0]]);
+      deselectDrink(&drinks[settings.drawing_order[4]]);
+      selectDrink(&drinks[settings.drawing_order[0]]);
       animate_layer_bounds(scroll_layer,GRect(3,64,5/3*width,100));
     break;
     case 1:
-      deselectDrink(&drinks[drawing_order[0]]);
-      selectDrink(&drinks[drawing_order[1]]);
+      deselectDrink(&drinks[settings.drawing_order[0]]);
+      selectDrink(&drinks[settings.drawing_order[1]]);
     break;
     case 2:
-      deselectDrink(&drinks[drawing_order[1]]);
-      selectDrink(&drinks[drawing_order[2]]);
+      deselectDrink(&drinks[settings.drawing_order[1]]);
+      selectDrink(&drinks[settings.drawing_order[2]]);
       animate_layer_bounds(scroll_layer,GRect(3-width/3,64,5/3*width,100));
     break;
     case 3:
-      deselectDrink(&drinks[drawing_order[2]]);
-      selectDrink(&drinks[drawing_order[3]]);
+      deselectDrink(&drinks[settings.drawing_order[2]]);
+      selectDrink(&drinks[settings.drawing_order[3]]);
       animate_layer_bounds(scroll_layer,GRect(3-2*width/3,64,5/3*width,100));
       break;
     case 4:
-      deselectDrink(&drinks[drawing_order[3]]);
-      selectDrink(&drinks[drawing_order[4]]);
+      deselectDrink(&drinks[settings.drawing_order[3]]);
+      selectDrink(&drinks[settings.drawing_order[4]]);
     break;
     default:
     break;
@@ -244,7 +228,7 @@ static void reset_counters(Window *me)
   action_bar_layer_destroy(conf_action_bar);
   if(reset)
   {
-    drink_meters = 0;
+    settings.drink_meters = 0;
     for (int i=0;i<5;i++)
       resetCounter(&drinks[i]);
     update_text();
@@ -256,13 +240,13 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
   float sum_drinks=get_sum_drinks();
   // We started drinking
   if(sum_drinks<1.0f)
-    first_drink_time = current_time;
+    settings.first_drink_time = current_time;
   if(current_drink!=4) // cigarette is no drink
   {
-    last_drink_time = current_time;
+    settings.last_drink_time = current_time;
     send_to_phone_multi(1, 1); // get location
   }
-  increaseCounter(&drinks[drawing_order[current_drink]]);
+  increaseCounter(&drinks[settings.drawing_order[current_drink]]);
   update_text();
 }
 
@@ -311,7 +295,7 @@ static void reset_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void immediate_reset_click_handler(ClickRecognizerRef recognizer, void *context) {
   light_on();
-  drink_meters = 0;
+  settings.drink_meters = 0;
   for (int i=0;i<5;i++)
     resetCounter(&drinks[i]);
   update_text();
@@ -335,10 +319,10 @@ static void move_right_click_handler(ClickRecognizerRef recognizer, void *contex
   if (next_drink>4) {
     next_drink=0;
   }
-  swapDrinks(&drinks[drawing_order[current_drink]], &drinks[drawing_order[next_drink]]);
-  unsigned char temp = drawing_order[current_drink];
-  drawing_order[current_drink] = drawing_order[next_drink];
-  drawing_order[next_drink] = temp;
+  swapDrinks(&drinks[settings.drawing_order[current_drink]], &drinks[settings.drawing_order[next_drink]]);
+  unsigned char temp = settings.drawing_order[current_drink];
+  settings.drawing_order[current_drink] = settings.drawing_order[next_drink];
+  settings.drawing_order[next_drink] = temp;
   
   current_drink = next_drink;
   
@@ -389,10 +373,10 @@ static void window_load(Window *me) {
   layer_add_child(layer,scroll_layer);
   
   uint32_t ressources[5] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT,RESOURCE_ID_IMAGE_CIGARETTE};
-  unsigned char storage_slots[5] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY,NUM_CIGARETTES_PKEY};
+  //unsigned char storage_slots[5] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY,NUM_CIGARETTES_PKEY};
   
   for(int i=0;i<5;i++)
-    createDrink(&drinks[i], scroll_layer, ressources[i], storage_slots[i], drawing_order[i], grid_size_v);
+    createDrink(&drinks[i], scroll_layer, ressources[i], &settings.num_drinks[i], settings.drawing_order[i], grid_size_v);
   
   action_bar_layer_add_to_window(action_bar, me);
   light_on();
@@ -423,7 +407,21 @@ static void init(void) {
   accel_tap_service_subscribe(&accel_tap_handler);
   
   // Get the count from persistent storage for use if it exists, otherwise use the default
-  if(persist_exists(LAST_DRINK_TIME))
+  if(persist_exists(SETTINGS_KEY))
+    persist_read_data(SETTINGS_KEY,&settings,sizeof(settings));
+  else
+  {
+    // set default values
+    settings.drink_meters=0;
+    settings.first_drink_time=current_time;
+    settings.last_drink_time=current_time;
+    for(unsigned int i=0;i<5;i++)
+    {
+      settings.drawing_order[i]=i;
+      settings.num_drinks[i] = 0;
+    }
+  }
+  /*if(persist_exists(LAST_DRINK_TIME))
     persist_read_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
   else
     last_drink_time = current_time;
@@ -434,7 +432,7 @@ static void init(void) {
   if(persist_exists(DRAWING_ORDER_PKEY))
     persist_read_data(DRAWING_ORDER_PKEY,drawing_order,5*sizeof(unsigned char));
   if(persist_exists(LAT_KEY))
-    drink_meters=persist_read_int(LAT_KEY);
+    drink_meters=persist_read_int(LAT_KEY);*/
 
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
@@ -473,10 +471,11 @@ static void deinit(void) {
     destroyDrink(&drinks[i]);
   }
   // Save the count into persistent storage on app exit
-  persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
+  persist_write_data(SETTINGS_KEY,&settings,sizeof(settings));
+  /*persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
   persist_write_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
   persist_write_data(DRAWING_ORDER_PKEY,drawing_order,sizeof(unsigned char)*5);
-  persist_write_int(LAT_KEY,drink_meters);
+  persist_write_int(LAT_KEY,drink_meters);*/
   autoconfig_deinit();
 }
 

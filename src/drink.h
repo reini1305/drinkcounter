@@ -16,7 +16,7 @@ typedef struct Drink{
   BitmapLayer* bitmap_layer;
   InverterLayer* inverter_layer;
   TextLayer* text_layer;
-  int num_drinks;
+  int *num_drinks;
   unsigned char storage_slot;
   unsigned char draw_slot;
   unsigned char width;
@@ -26,15 +26,15 @@ typedef struct Drink{
 
 void loadDrink(Drink *drink)
 {
-  drink->num_drinks = persist_exists(drink->storage_slot) ? persist_read_int(drink->storage_slot) : 0;
+  //drink->num_drinks = persist_exists(drink->storage_slot) ? persist_read_int(drink->storage_slot) : 0;
 }
 
 void saveDrink(Drink *drink)
 {
-  persist_write_int(drink->storage_slot, drink->num_drinks);
+  //persist_write_int(drink->storage_slot, drink->num_drinks);
 }
 
-void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned char storage_id, int draw_slot, int grid_size_v)
+void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, int* num_drinks, int draw_slot, int grid_size_v)
 {
   int text_y = 50;
   int text_height = 100;
@@ -56,9 +56,10 @@ void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, unsigned
   drink->inverter_layer = inverter_layer_create(GRect(draw_slot*grid_size_v, text_y, grid_size_v, text_height));
   layer_set_hidden(inverter_layer_get_layer(drink->inverter_layer),true);
   layer_add_child(parent_layer,inverter_layer_get_layer(drink->inverter_layer));
-  drink->storage_slot = storage_id;
+  //drink->storage_slot = storage_id;
   drink->draw_slot=draw_slot;
   drink->width=grid_size_v;
+  drink->num_drinks=num_drinks;
   loadDrink(drink);
 }
 
@@ -87,7 +88,7 @@ void redrawText(Drink* drink)
   int text_y = 50;
   int text_height = 100;
   
-  snprintf(drink->text, sizeof(drink->text), "%u", drink->num_drinks);
+  snprintf(drink->text, sizeof(drink->text), "%u", *drink->num_drinks);
   text_layer_set_text(drink->text_layer, drink->text);
   
   // Move layers to the correct position
@@ -97,12 +98,12 @@ void redrawText(Drink* drink)
 }
 void increaseCounter(Drink* drink)
 {
-  drink->num_drinks++;
+  *(drink->num_drinks)=*(drink->num_drinks)+1;
   redrawText(drink);
 }
 void resetCounter(Drink* drink)
 {
-  drink->num_drinks=0;
+  *drink->num_drinks=0;
   redrawText(drink);
 }
 void swapDrinks(Drink* drink1, Drink* drink2)
