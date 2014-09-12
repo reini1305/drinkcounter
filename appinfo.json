@@ -3,8 +3,8 @@
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 32,
-  "versionLabel": "5.8",
+  "versionCode": 34,
+  "versionLabel": "5.9",
   "watchapp": {
     "watchface": false
   },
@@ -20,10 +20,10 @@
       "lon": 16
   },
   "preferences": {
-    "embedded": false,
+    "embedded": true,
     "debug": false,
     "url": "http://musikkapelle-hollenegg.at/images/autoconfig.html",
-    "description": "Remember: The BAC calculation is just an estimation. Never drive under the influence of alcohol!",
+    "description": "October Fest Edition! Estimated BAC is only an estimation, so never drive under the influcence of alcohol!",
     "items": [{
               "name": "ebac",
               "title": "Estimate BAC?",
@@ -66,7 +66,8 @@
               "type": "enum",
               "choices": {
               "REGULAR": "Regular (0.33l)",
-              "LARGE": "Large (0.5l)"
+              "LARGE": "Large (0.5l)",
+              "HUGE": "Huge (1.0l)"
               },
               "default": 0
               },

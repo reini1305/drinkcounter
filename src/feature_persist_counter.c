@@ -42,7 +42,7 @@ static bool reset = false;
 static int current_drink = 0;
 static struct tm current_time;
 
-static bool send_to_phone_multi(int quote_key, int symbol) {
+/*static bool send_to_phone_multi(int quote_key, int symbol) {
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
   
@@ -52,7 +52,7 @@ static bool send_to_phone_multi(int quote_key, int symbol) {
   
   app_message_outbox_send();
   return true;
-}
+}*/
 
 static void light_off(void *data)
 {
@@ -105,8 +105,10 @@ static float get_ebac()
   
   unsigned int time_diff = abs(combine1 - combine2);
 
-  if(getSize())
+  if(getSize()==1)
     sum_drinks+=*(drinks[0].num_drinks)/0.33*0.5-*(drinks[0].num_drinks);
+  if(getSize()==2)
+    sum_drinks+=*(drinks[0].num_drinks)*3.0-*(drinks[0].num_drinks);
   
   float bw = getSex()==0 ? 0.58f:0.49f;
   float scale_factor = getUnit()==0? 1.0f:0.453592f; // 0 = kg, 1 = pounds
@@ -153,10 +155,10 @@ static void update_text() {
       /*snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                getOutput()==0? "‰":"%",
                getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");*/
-      if(settings.drink_meters>0)
+      /*if(settings.drink_meters>0)
         snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\nwalking %d.%02d%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                getOutput()==0? "‰":"%",(int)(settings.drink_meters*0.62/100),(int)(settings.drink_meters*0.62),getUnit()==0?"km":"mi");
-      else
+      else*/
         snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                  getOutput()==0? "‰":"%",
                  getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");
@@ -244,7 +246,7 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
   if(current_drink!=4) // cigarette is no drink
   {
     settings.last_drink_time = current_time;
-    send_to_phone_multi(1, 1); // get location
+    //send_to_phone_multi(1, 1); // get location
   }
   increaseCounter(&drinks[settings.drawing_order[current_drink]]);
   update_text();
