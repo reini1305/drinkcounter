@@ -32,6 +32,7 @@ typedef struct Settings
   struct tm last_drink_time;
   struct tm first_drink_time;
   int drink_meters;
+  float drink_prices[5];
 }Settings;
 
 

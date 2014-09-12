@@ -3,10 +3,6 @@
 # include <drink.h>
 #include "autoconfig.h"
 // TODOS:
-// Add configuration dialog
-// Make drink types 
-
-
 
 // Main Window
 static Window *window;
@@ -38,6 +34,14 @@ static TextLayer *conf_text_layer;
 static GBitmap *action_icon_cancel;
 static GBitmap *action_icon_confirm;
 static bool reset = false;
+
+// Price Dialog
+static Window *price_dialog;
+static ActionBarLayer *price_action_bar;
+static TextLayer *price_text_layer;
+static char price_text_buffer[15];
+static GBitmap *action_icon_minus;
+static float current_price;
 
 static int current_drink = 0;
 static struct tm current_time;
@@ -89,6 +93,16 @@ static float get_sum_drinks()
   return sum_drinks;
 }
 
+static float get_price_drinks()
+{
+  float sum_drinks=0;
+  for (int i=0; i<5; i++)
+  {
+    sum_drinks+=*(drinks[i].num_drinks)*settings.drink_prices[i];
+  }
+  return sum_drinks;
+}
+
 static float get_ebac()
 {
   float sum_drinks = get_sum_drinks();
@@ -130,6 +144,7 @@ static void update_text() {
   }
   float ebac = max(get_ebac(),0.0f);
   float sum_drinks = get_sum_drinks();
+  float price = get_price_drinks();
   if(sum_drinks<1.0f)
     text_layer_set_text(header_text_layer,"Drink Counter");
   else if (getEbac()==false)
@@ -146,8 +161,8 @@ static void update_text() {
       
       unsigned int time_diff = abs(combine1 - combine2);
       
-      snprintf(output_text, sizeof(output_text), "Time since last drink: %d %s",time_diff>60?time_diff/60:time_diff,
-               time_diff>60?"hour(s)":"min(s)");
+      snprintf(output_text, sizeof(output_text), "Last drink: %d %s\nPrice: %d.%d",time_diff>60?time_diff/60:time_diff,
+               time_diff>60?"h":"m",(int)price,(int)(price*10.f)-((int)price)*10);
       text_layer_set_text(header_text_layer,output_text);
     }
     else
@@ -159,9 +174,8 @@ static void update_text() {
         snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\nwalking %d.%02d%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                getOutput()==0? "‰":"%",(int)(settings.drink_meters*0.62/100),(int)(settings.drink_meters*0.62),getUnit()==0?"km":"mi");
       else*/
-        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-                 getOutput()==0? "‰":"%",
-                 getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");
+        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d\nPrice: %d.%d",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+                 (int)price,(int)(price*10.f)-((int)price)*10);
       text_layer_set_text(header_text_layer,output_text);
     }
 }
@@ -252,6 +266,7 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
   update_text();
 }
 
+// Confirmation Dialog
 static void conf_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   reset = true;
   window_stack_pop(true);
@@ -288,6 +303,72 @@ static void dialog_load(Window *me)
   text_layer_set_text(conf_text_layer, "Do you want to reset?");
   layer_add_child(layer, text_layer_get_layer(conf_text_layer));
   reset = false;
+}
+
+
+// Price dialog
+static void price_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  settings.drink_prices[settings.drawing_order[current_drink]]=current_price;
+  window_stack_pop(true);
+}
+
+static void price_cancel_click_handler(ClickRecognizerRef recognizer, void *context) {
+  window_stack_pop(true);
+}
+
+static void price_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if(current_price<10.0f)
+    current_price+=0.1f;
+  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d",(int)current_price,(int)(current_price*10.f)-((int)current_price)*10);
+}
+
+static void price_down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if(current_price>0.0f)
+    current_price-=0.1f;
+  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d",(int)current_price,(int)(current_price*10.f)-((int)current_price)*10);
+}
+
+static void price_click_config_provider(void *context) {
+  const uint16_t repeat_interval_ms = 100;
+  window_single_repeating_click_subscribe(BUTTON_ID_SELECT, repeat_interval_ms, (ClickHandler) price_select_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, repeat_interval_ms, (ClickHandler) price_down_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_UP, repeat_interval_ms, (ClickHandler) price_up_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_BACK, repeat_interval_ms, (ClickHandler) price_cancel_click_handler);
+}
+
+static void price_dialog_load(Window *me)
+{
+  price_action_bar = action_bar_layer_create();
+  action_bar_layer_add_to_window(price_action_bar, me);
+  action_bar_layer_set_click_config_provider(price_action_bar, price_click_config_provider);
+  
+  action_bar_layer_set_icon(price_action_bar, BUTTON_ID_UP, action_icon_plus);
+  action_bar_layer_set_icon(price_action_bar, BUTTON_ID_SELECT, action_icon_confirm);
+  action_bar_layer_set_icon(price_action_bar, BUTTON_ID_DOWN, action_icon_minus);
+  
+  Layer *layer = window_get_root_layer(me);
+  const int16_t width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
+  
+  conf_text_layer = text_layer_create(GRect(4, 20, width, 160));
+  text_layer_set_font(conf_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+  text_layer_set_background_color(conf_text_layer, GColorClear);
+  text_layer_set_text_alignment(conf_text_layer,GTextAlignmentCenter);
+  current_price = settings.drink_prices[current_drink];
+  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d",(int)current_price,(int)(current_price*10.f)-((int)current_price)*10);
+  text_layer_set_text(conf_text_layer, price_text_buffer);
+  layer_add_child(layer, text_layer_get_layer(conf_text_layer));
+}
+
+static void price_dialog_unload(Window *me)
+{
+  text_layer_destroy(price_text_layer);
+  action_bar_layer_destroy(price_action_bar);
+  update_text();
+}
+
+static void price_click_handler(ClickRecognizerRef recognizer, void *context) {
+  light_on();
+  window_stack_push(price_dialog,true);
 }
 
 static void reset_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -337,6 +418,7 @@ static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) right_click_handler);
   window_long_click_subscribe(BUTTON_ID_DOWN, 1000, (ClickHandler) move_right_click_handler,NULL);
   window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) increment_click_handler);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 1000, (ClickHandler) price_click_handler,NULL);
 }
 
 static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
@@ -403,6 +485,7 @@ static void init(void) {
   action_icon_right = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RIGHT);
   action_icon_cancel = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CROSS);
   action_icon_confirm = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CHECK);
+  action_icon_minus =gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_MINUS);
   
   light_timer = app_timer_register(10000,light_off,NULL);
   
@@ -410,7 +493,10 @@ static void init(void) {
   
   // Get the count from persistent storage for use if it exists, otherwise use the default
   if(persist_exists(SETTINGS_KEY))
+  {
     persist_read_data(SETTINGS_KEY,&settings,sizeof(settings));
+    //APP_LOG(APP_LOG_LEVEL_DEBUG,"in loaded settings...");
+  }
   else
   {
     // set default values
@@ -421,6 +507,7 @@ static void init(void) {
     {
       settings.drawing_order[i]=i;
       settings.num_drinks[i] = 0;
+      settings.drink_prices[i] = 0.0;
     }
   }
   /*if(persist_exists(LAST_DRINK_TIME))
@@ -448,6 +535,12 @@ static void init(void) {
     .unload = reset_counters,
   });
   
+  price_dialog = window_create();
+  window_set_window_handlers(price_dialog, (WindowHandlers) {
+    .load = price_dialog_load,
+    .unload = price_dialog_unload,
+  });
+  
   status_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_STATUS_ICON);
   window_set_status_bar_icon(window,status_icon_bitmap);
 
@@ -461,8 +554,10 @@ static void deinit(void) {
   
   window_destroy(window);
   window_destroy(conf_dialog);
+  window_destroy(price_dialog);
 
   gbitmap_destroy(action_icon_plus);
+  gbitmap_destroy(action_icon_minus);
   gbitmap_destroy(action_icon_reset);
   gbitmap_destroy(action_icon_right);
   gbitmap_destroy(status_icon_bitmap);
@@ -473,7 +568,8 @@ static void deinit(void) {
     destroyDrink(&drinks[i]);
   }
   // Save the count into persistent storage on app exit
-  persist_write_data(SETTINGS_KEY,&settings,sizeof(settings));
+  int ret=persist_write_data(SETTINGS_KEY,&settings,sizeof(settings));
+  //APP_LOG(APP_LOG_LEVEL_DEBUG,"saved settings result: %d...",ret);
   /*persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
   persist_write_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
   persist_write_data(DRAWING_ORDER_PKEY,drawing_order,sizeof(unsigned char)*5);
