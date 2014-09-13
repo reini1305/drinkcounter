@@ -23,7 +23,7 @@
     "embedded": true,
     "debug": false,
     "url": "http://musikkapelle-hollenegg.at/images/autoconfig.html",
-    "description": "October Fest Edition! Estimated BAC is only an estimation, so never drive under the influcence of alcohol!",
+    "description": "Usage: long-press middle key to set prices for individual drinks. Long-press bottom key to move the current item. Other keys should be self explanatory...",
     "items": [{
               "name": "ebac",
               "title": "Estimate BAC?",
@@ -55,8 +55,8 @@
               "title": "Weight Unit",
               "type": "enum",
               "choices": {
-              "KG": "Kilograms/Kilometers",
-              "POUNDS": "Pounds/Miles"
+              "KG": "Kilograms",
+              "POUNDS": "Pounds"
               },
               "default": 0
               },

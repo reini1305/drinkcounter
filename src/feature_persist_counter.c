@@ -41,7 +41,7 @@ static ActionBarLayer *price_action_bar;
 static TextLayer *price_text_layer;
 static char price_text_buffer[15];
 static GBitmap *action_icon_minus;
-static float current_price;
+static int current_price;
 
 static int current_drink = 0;
 static struct tm current_time;
@@ -161,7 +161,7 @@ static void update_text() {
       
       unsigned int time_diff = abs(combine1 - combine2);
       
-      snprintf(output_text, sizeof(output_text), "Last drink: %d %s\nPrice: %d.%d",time_diff>60?time_diff/60:time_diff,
+      snprintf(output_text, sizeof(output_text), "Last drink: %d %s\nPrice: %d.%d0",time_diff>60?time_diff/60:time_diff,
                time_diff>60?"h":"m",(int)price,(int)(price*10.f)-((int)price)*10);
       text_layer_set_text(header_text_layer,output_text);
     }
@@ -174,7 +174,7 @@ static void update_text() {
         snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\nwalking %d.%02d%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                getOutput()==0? "‰":"%",(int)(settings.drink_meters*0.62/100),(int)(settings.drink_meters*0.62),getUnit()==0?"km":"mi");
       else*/
-        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d\nPrice: %d.%d",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d\nPrice: %d.%d0",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
                  (int)price,(int)(price*10.f)-((int)price)*10);
       text_layer_set_text(header_text_layer,output_text);
     }
@@ -308,7 +308,7 @@ static void dialog_load(Window *me)
 
 // Price dialog
 static void price_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  settings.drink_prices[settings.drawing_order[current_drink]]=current_price;
+  settings.drink_prices[settings.drawing_order[current_drink]]=current_price/10.0f;
   window_stack_pop(true);
 }
 
@@ -317,15 +317,15 @@ static void price_cancel_click_handler(ClickRecognizerRef recognizer, void *cont
 }
 
 static void price_up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if(current_price<10.0f)
-    current_price+=0.1f;
-  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d",(int)current_price,(int)(current_price*10.f)-((int)current_price)*10);
+  if(current_price<100)
+    current_price++;
+  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d0",current_price/10,current_price-(current_price/10)*10);
 }
 
 static void price_down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if(current_price>0.0f)
-    current_price-=0.1f;
-  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d",(int)current_price,(int)(current_price*10.f)-((int)current_price)*10);
+  if(current_price>0)
+    current_price--;
+  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d0",(int)current_price/10,current_price-(current_price/10)*10);
 }
 
 static void price_click_config_provider(void *context) {
@@ -353,8 +353,8 @@ static void price_dialog_load(Window *me)
   text_layer_set_font(conf_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
   text_layer_set_background_color(conf_text_layer, GColorClear);
   text_layer_set_text_alignment(conf_text_layer,GTextAlignmentCenter);
-  current_price = settings.drink_prices[current_drink];
-  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d",(int)current_price,(int)(current_price*10.f)-((int)current_price)*10);
+  current_price = settings.drink_prices[settings.drawing_order[current_drink]]*10;
+  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d0",current_price/10,current_price-(current_price/10)*10);
   text_layer_set_text(conf_text_layer, price_text_buffer);
   layer_add_child(layer, text_layer_get_layer(conf_text_layer));
 }
