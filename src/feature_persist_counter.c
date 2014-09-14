@@ -137,6 +137,7 @@ static float max(float val1,float val2)
 
 static void update_text() {
   static char output_text[35];
+  static char price_string[15];
   
   for (int i=0; i<5; i++)
   {
@@ -145,6 +146,11 @@ static void update_text() {
   float ebac = max(get_ebac(),0.0f);
   float sum_drinks = get_sum_drinks();
   float price = get_price_drinks();
+  
+  if (price>0.f)
+    snprintf(price_string,sizeof(price_string),"Price: %d.%d0",(int)price,(int)(price*10.f)-((int)price)*10);
+  else
+    snprintf(price_string, sizeof(price_string), " ");
   if(sum_drinks<1.0f)
     text_layer_set_text(header_text_layer,"Drink Counter");
   else if (getEbac()==false)
@@ -161,21 +167,14 @@ static void update_text() {
       
       unsigned int time_diff = abs(combine1 - combine2);
       
-      snprintf(output_text, sizeof(output_text), "Last drink: %d %s\nPrice: %d.%d0",time_diff>60?time_diff/60:time_diff,
-               time_diff>60?"h":"m",(int)price,(int)(price*10.f)-((int)price)*10);
+      snprintf(output_text, sizeof(output_text), "Last drink: %d %s\n%s",time_diff>60?time_diff/60:time_diff,
+               time_diff>60?"h":"m",price_string);
       text_layer_set_text(header_text_layer,output_text);
     }
     else
     {
-      /*snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\n(%s, %d%s)",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-               getOutput()==0? "‰":"%",
-               getSex()==0? "M":"F",(int)getWeight(),getUnit()==0?"kg":"lbs");*/
-      /*if(settings.drink_meters>0)
-        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d%s\nwalking %d.%02d%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-               getOutput()==0? "‰":"%",(int)(settings.drink_meters*0.62/100),(int)(settings.drink_meters*0.62),getUnit()==0?"km":"mi");
-      else*/
-        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d\nPrice: %d.%d0",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-                 (int)price,(int)(price*10.f)-((int)price)*10);
+        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d\n%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+                 price_string);
       text_layer_set_text(header_text_layer,output_text);
     }
 }
@@ -316,16 +315,21 @@ static void price_cancel_click_handler(ClickRecognizerRef recognizer, void *cont
   window_stack_pop(true);
 }
 
+static void set_price_string(void)
+{
+  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d0",current_price/10,current_price-(current_price/10)*10);
+}
+
 static void price_up_click_handler(ClickRecognizerRef recognizer, void *context) {
   if(current_price<100)
     current_price++;
-  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d0",current_price/10,current_price-(current_price/10)*10);
+  set_price_string();
 }
 
 static void price_down_click_handler(ClickRecognizerRef recognizer, void *context) {
   if(current_price>0)
     current_price--;
-  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d0",(int)current_price/10,current_price-(current_price/10)*10);
+  set_price_string();
 }
 
 static void price_click_config_provider(void *context) {
@@ -354,7 +358,7 @@ static void price_dialog_load(Window *me)
   text_layer_set_background_color(conf_text_layer, GColorClear);
   text_layer_set_text_alignment(conf_text_layer,GTextAlignmentCenter);
   current_price = settings.drink_prices[settings.drawing_order[current_drink]]*10;
-  snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d0",current_price/10,current_price-(current_price/10)*10);
+  set_price_string();
   text_layer_set_text(conf_text_layer, price_text_buffer);
   layer_add_child(layer, text_layer_get_layer(conf_text_layer));
 }
