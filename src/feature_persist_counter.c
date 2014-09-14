@@ -181,21 +181,6 @@ static void update_text() {
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
   autoconfig_in_received_handler(iter, context);
-  Tuple *lat_tuple = dict_find(iter, LAT_KEY);
-  if(lat_tuple)
-  {
-    float sum_drinks = get_sum_drinks();
-    if(sum_drinks<2)
-      settings.drink_meters=0;
-    else
-    {
-      if(lat_tuple->value->int32 == -1)
-        settings.drink_meters=0;
-      else
-        settings.drink_meters = settings.drink_meters + lat_tuple->value->int32;
-    }
-    
-  }
   update_text();
 }
 
@@ -318,10 +303,11 @@ static void price_cancel_click_handler(ClickRecognizerRef recognizer, void *cont
 static void set_price_string(void)
 {
   snprintf(price_text_buffer,sizeof(price_text_buffer),"Price:\n%d.%d0",current_price/10,current_price-(current_price/10)*10);
+  layer_mark_dirty(text_layer_get_layer(price_text_layer));
 }
 
 static void price_up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if(current_price<100)
+  if(current_price<1000)
     current_price++;
   set_price_string();
 }
@@ -333,7 +319,7 @@ static void price_down_click_handler(ClickRecognizerRef recognizer, void *contex
 }
 
 static void price_click_config_provider(void *context) {
-  const uint16_t repeat_interval_ms = 100;
+  const uint16_t repeat_interval_ms = 50;
   window_single_repeating_click_subscribe(BUTTON_ID_SELECT, repeat_interval_ms, (ClickHandler) price_select_click_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, repeat_interval_ms, (ClickHandler) price_down_click_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_UP, repeat_interval_ms, (ClickHandler) price_up_click_handler);
@@ -353,14 +339,14 @@ static void price_dialog_load(Window *me)
   Layer *layer = window_get_root_layer(me);
   const int16_t width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
   
-  conf_text_layer = text_layer_create(GRect(4, 20, width, 160));
-  text_layer_set_font(conf_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
-  text_layer_set_background_color(conf_text_layer, GColorClear);
-  text_layer_set_text_alignment(conf_text_layer,GTextAlignmentCenter);
+  price_text_layer = text_layer_create(GRect(4, 20, width, 160));
+  text_layer_set_font(price_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+  text_layer_set_background_color(price_text_layer, GColorClear);
+  text_layer_set_text_alignment(price_text_layer,GTextAlignmentCenter);
   current_price = settings.drink_prices[settings.drawing_order[current_drink]]*10;
+  text_layer_set_text(price_text_layer, price_text_buffer);
+  layer_add_child(layer, text_layer_get_layer(price_text_layer));
   set_price_string();
-  text_layer_set_text(conf_text_layer, price_text_buffer);
-  layer_add_child(layer, text_layer_get_layer(conf_text_layer));
 }
 
 static void price_dialog_unload(Window *me)
@@ -514,18 +500,6 @@ static void init(void) {
       settings.drink_prices[i] = 0.0;
     }
   }
-  /*if(persist_exists(LAST_DRINK_TIME))
-    persist_read_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
-  else
-    last_drink_time = current_time;
-  if(persist_exists(FIRST_DRINK_TIME))
-    persist_read_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
-  else
-    first_drink_time = current_time;
-  if(persist_exists(DRAWING_ORDER_PKEY))
-    persist_read_data(DRAWING_ORDER_PKEY,drawing_order,5*sizeof(unsigned char));
-  if(persist_exists(LAT_KEY))
-    drink_meters=persist_read_int(LAT_KEY);*/
 
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
@@ -572,12 +546,8 @@ static void deinit(void) {
     destroyDrink(&drinks[i]);
   }
   // Save the count into persistent storage on app exit
-  int ret=persist_write_data(SETTINGS_KEY,&settings,sizeof(settings));
-  //APP_LOG(APP_LOG_LEVEL_DEBUG,"saved settings result: %d...",ret);
-  /*persist_write_data(LAST_DRINK_TIME,&last_drink_time,sizeof(last_drink_time));
-  persist_write_data(FIRST_DRINK_TIME,&first_drink_time,sizeof(first_drink_time));
-  persist_write_data(DRAWING_ORDER_PKEY,drawing_order,sizeof(unsigned char)*5);
-  persist_write_int(LAT_KEY,drink_meters);*/
+  persist_write_data(SETTINGS_KEY,&settings,sizeof(settings));
+
   autoconfig_deinit();
 }
 
