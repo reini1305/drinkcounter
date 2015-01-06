@@ -3,12 +3,12 @@
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 35,
-  "versionLabel": "6",
+  "versionCode": 37,
+  "versionLabel": "6.2",
   "watchapp": {
     "watchface": false
   },
-  "capabilities": [ "configurable","location" ],
+  "capabilities": [ "configurable"],
   "appKeys": {
       "sex":6,
       "weight":7,
@@ -154,7 +154,8 @@
               "characterRegex": "[0-9]",
               "type": "font",
               "name": "FONT_DIGITAL_30",
-              "file": "fonts/digital_regular.ttf"
+              "file": "fonts/digital_regular.ttf",
+	      "compatability": "2.7"
               }
     ]
   }

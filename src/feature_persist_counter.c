@@ -459,10 +459,10 @@ static void window_load(Window *me) {
 }
 
 static void window_unload(Window *window) {
-  text_layer_destroy(header_text_layer);
+  /*text_layer_destroy(header_text_layer);
 
   action_bar_layer_destroy(action_bar);
-  layer_destroy(scroll_layer);
+  layer_destroy(scroll_layer);*/
   light_enable(false);
 }
 
@@ -530,7 +530,7 @@ static void deinit(void) {
   tick_timer_service_unsubscribe();
   accel_tap_service_unsubscribe();
   
-  window_destroy(window);
+  /*window_destroy(window);
   window_destroy(conf_dialog);
   window_destroy(price_dialog);
 
@@ -544,7 +544,7 @@ static void deinit(void) {
   
   for (int i=0;i<5; i++) {
     destroyDrink(&drinks[i]);
-  }
+  }*/
   // Save the count into persistent storage on app exit
   persist_write_data(SETTINGS_KEY,&settings,sizeof(settings));
 
