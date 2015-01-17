@@ -7,7 +7,7 @@
 // Main Window
 static Window *window;
 
-static Drink drinks[5];
+static Drink drinks[NUM_DRINK_TYPES];
 static Settings settings;
 //static unsigned char drawing_order[5]={0,1,2,3,4};
 
@@ -96,7 +96,7 @@ static float get_sum_drinks()
 static float get_price_drinks()
 {
   float sum_drinks=0;
-  for (int i=0; i<5; i++)
+  for (int i=0; i<NUM_DRINK_TYPES; i++)
   {
     sum_drinks+=*(drinks[i].num_drinks)*settings.drink_prices[i];
   }
@@ -139,7 +139,7 @@ static void update_text() {
   static char output_text[35];
   static char price_string[15];
   
-  for (int i=0; i<5; i++)
+  for (int i=0; i<NUM_DRINK_TYPES; i++)
   {
     redrawText(&drinks[i]);
   }
@@ -187,9 +187,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 static void update_selection() {
   switch (current_drink) {
     case 0:
-      deselectDrink(&drinks[settings.drawing_order[4]]);
+      deselectDrink(&drinks[settings.drawing_order[5]]);
       selectDrink(&drinks[settings.drawing_order[0]]);
-      animate_layer_bounds(scroll_layer,GRect(3,64,5/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3,64,NUM_DRINK_TYPES/3*width,100));
     break;
     case 1:
       deselectDrink(&drinks[settings.drawing_order[0]]);
@@ -198,16 +198,21 @@ static void update_selection() {
     case 2:
       deselectDrink(&drinks[settings.drawing_order[1]]);
       selectDrink(&drinks[settings.drawing_order[2]]);
-      animate_layer_bounds(scroll_layer,GRect(3-width/3,64,5/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3-width/3,64,NUM_DRINK_TYPES/3*width,100));
     break;
     case 3:
       deselectDrink(&drinks[settings.drawing_order[2]]);
       selectDrink(&drinks[settings.drawing_order[3]]);
-      animate_layer_bounds(scroll_layer,GRect(3-2*width/3,64,5/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3-2*width/3,64,NUM_DRINK_TYPES/3*width,100));
       break;
     case 4:
       deselectDrink(&drinks[settings.drawing_order[3]]);
       selectDrink(&drinks[settings.drawing_order[4]]);
+      animate_layer_bounds(scroll_layer,GRect(3-3*width/3,64,NUM_DRINK_TYPES/3*width,100));
+    break;
+    case 5:
+      deselectDrink(&drinks[settings.drawing_order[4]]);
+      selectDrink(&drinks[settings.drawing_order[5]]);
     break;
     default:
     break;
@@ -229,7 +234,7 @@ static void reset_counters(Window *me)
   if(reset)
   {
     settings.drink_meters = 0;
-    for (int i=0;i<5;i++)
+    for (int i=0;i<NUM_DRINK_TYPES;i++)
       resetCounter(&drinks[i]);
     update_text();
   }
@@ -369,7 +374,7 @@ static void reset_click_handler(ClickRecognizerRef recognizer, void *context) {
 static void immediate_reset_click_handler(ClickRecognizerRef recognizer, void *context) {
   light_on();
   settings.drink_meters = 0;
-  for (int i=0;i<5;i++)
+  for (int i=0;i<NUM_DRINK_TYPES;i++)
     resetCounter(&drinks[i]);
   update_text();
 }
@@ -378,7 +383,7 @@ static void immediate_reset_click_handler(ClickRecognizerRef recognizer, void *c
 static void right_click_handler(ClickRecognizerRef recognizer, void *context) {
   light_on();
   current_drink++;
-  if (current_drink>4) {
+  if (current_drink>NUM_DRINK_TYPES-1) {
     current_drink=0;
   }
   update_selection();
@@ -389,7 +394,7 @@ static void move_right_click_handler(ClickRecognizerRef recognizer, void *contex
   
   // Swap current drink with the next drink
   unsigned char next_drink = current_drink+1;
-  if (next_drink>4) {
+  if (next_drink>NUM_DRINK_TYPES-1) {
     next_drink=0;
   }
   swapDrinks(&drinks[settings.drawing_order[current_drink]], &drinks[settings.drawing_order[next_drink]]);
@@ -442,14 +447,14 @@ static void window_load(Window *me) {
   int grid_size_v = width/3;
   
   layer_set_clips(layer,false);
-  scroll_layer = layer_create(GRect(3,64,5/3*width,100));
+  scroll_layer = layer_create(GRect(3,64,NUM_DRINK_TYPES/3*width,100));
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   
-  uint32_t ressources[5] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT,RESOURCE_ID_IMAGE_CIGARETTE};
+  uint32_t ressources[NUM_DRINK_TYPES] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT,RESOURCE_ID_IMAGE_CIGARETTE,RESOURCE_ID_IMAGE_WATER};
   //unsigned char storage_slots[5] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY,NUM_CIGARETTES_PKEY};
   
-  for(int i=0;i<5;i++)
+  for(int i=0;i<NUM_DRINK_TYPES;i++)
     createDrink(&drinks[i], scroll_layer, ressources[i], &settings.num_drinks[i], settings.drawing_order[i], grid_size_v);
   
   action_bar_layer_add_to_window(action_bar, me);
@@ -489,11 +494,13 @@ static void init(void) {
   }
   else
   {
+    if(persist_exists(OLD_SETTINGS_KEY))
+      persist_delete(OLD_SETTINGS_KEY);
     // set default values
     settings.drink_meters=0;
     settings.first_drink_time=current_time;
     settings.last_drink_time=current_time;
-    for(unsigned int i=0;i<5;i++)
+    for(unsigned int i=0;i<NUM_DRINK_TYPES;i++)
     {
       settings.drawing_order[i]=i;
       settings.num_drinks[i] = 0;
