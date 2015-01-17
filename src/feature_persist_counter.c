@@ -58,6 +58,10 @@ static struct tm current_time;
   return true;
 }*/
 
+#undef APP_LOG
+
+#define APP_LOG(level, fmt, args... )
+
 static void light_off(void *data)
 {
   light_enable(false);
@@ -394,7 +398,7 @@ static void move_right_click_handler(ClickRecognizerRef recognizer, void *contex
   
   // Swap current drink with the next drink
   unsigned char next_drink = current_drink+1;
-  if (next_drink>NUM_DRINK_TYPES-1) {
+  if (next_drink==NUM_DRINK_TYPES) {
     next_drink=0;
   }
   swapDrinks(&drinks[settings.drawing_order[current_drink]], &drinks[settings.drawing_order[next_drink]]);
@@ -403,6 +407,10 @@ static void move_right_click_handler(ClickRecognizerRef recognizer, void *contex
   settings.drawing_order[next_drink] = temp;
   
   current_drink = next_drink;
+  APP_LOG(APP_LOG_LEVEL_DEBUG,"%d,%d,%d,%d,%d,%d,%d\n",settings.drawing_order[0],settings.drawing_order[1],
+          settings.drawing_order[2],settings.drawing_order[3],settings.drawing_order[4],settings.drawing_order[5],current_drink);
+  APP_LOG(APP_LOG_LEVEL_DEBUG,"%d,%d,%d,%d,%d,%d,%d\n",drinks[0].draw_slot,drinks[1].draw_slot,drinks[2].draw_slot,
+          drinks[3].draw_slot,drinks[4].draw_slot,drinks[5].draw_slot,current_drink);
   
   update_selection();
 }
@@ -455,7 +463,7 @@ static void window_load(Window *me) {
   //unsigned char storage_slots[5] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY,NUM_CIGARETTES_PKEY};
   
   for(int i=0;i<NUM_DRINK_TYPES;i++)
-    createDrink(&drinks[i], scroll_layer, ressources[i], &settings.num_drinks[i], settings.drawing_order[i], grid_size_v);
+    createDrink(&drinks[settings.drawing_order[i]], scroll_layer, ressources[settings.drawing_order[i]], &settings.num_drinks[settings.drawing_order[i]], i, grid_size_v);
   
   action_bar_layer_add_to_window(action_bar, me);
   light_on();
@@ -507,6 +515,14 @@ static void init(void) {
       settings.drink_prices[i] = 0.0;
     }
   }
+  APP_LOG(APP_LOG_LEVEL_DEBUG,"%d,%d,%d,%d,%d,%d,%d\n",settings.drawing_order[0],settings.drawing_order[1],
+          settings.drawing_order[2],settings.drawing_order[3],settings.drawing_order[4],settings.drawing_order[5],current_drink);
+  /*for(unsigned int i=0;i<NUM_DRINK_TYPES;i++)
+  {
+    settings.drawing_order[i]=5-i;
+    settings.num_drinks[i] = 0;
+    settings.drink_prices[i] = 0.0;
+  }*/
 
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
