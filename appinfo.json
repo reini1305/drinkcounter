@@ -3,8 +3,8 @@
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 39,
-  "versionLabel": "6.4",
+  "versionCode": 40,
+  "versionLabel": "6.5",
   "watchapp": {
     "watchface": false
   },
@@ -23,7 +23,7 @@
     "embedded": true,
     "debug": false,
     "url": "http://musikkapelle-hollenegg.at/images/autoconfig.html",
-    "description": "Usage: long-press middle key to set prices for individual drinks. Long-press bottom key to move the current item. Other keys should be self explanatory...",
+    "description": "Usage: long-press middle key to set prices for individual drinks. Long-press bottom key to move the current item. Other keys should be self explanatory. If you like what I'm doing, consider a donation: <br><a href='https://pledgie.com/campaigns/28156'><img alt='Click here to lend your support to: Christian Reinbachers Pebble Apps and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/28156.png?skin_name=chrome' border='0' ></a>",
     "items": [{
               "name": "ebac",
               "title": "Estimate BAC?",
