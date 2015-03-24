@@ -130,32 +130,32 @@
         "file": "images/action_icon_reset.png"
       },
       {
-        "type": "png",
+        "type": "pbi8",
         "name": "IMAGE_BEER",
         "file": "images/beer.png"
       },
       {
-        "type": "png",
+        "type": "pbi8",
         "name": "IMAGE_WINE",
         "file": "images/wine.png"
       },
       {
-        "type": "png",
+        "type": "pbi8",
         "name": "IMAGE_COCKTAIL",
         "file": "images/cocktail.png"
       },
       {
-        "type": "png",
+        "type": "pbi8",
         "name": "IMAGE_WATER",
         "file": "images/water.png"
       },
       {
-        "type": "png",
+        "type": "pbi8",
         "name": "IMAGE_SHOT",
         "file": "images/shot.png"
       },
       {
-        "type": "png",
+        "type": "pbi8",
         "name": "IMAGE_CIGARETTE",
         "file": "images/smoking.png"
       },

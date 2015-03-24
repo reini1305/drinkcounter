@@ -75,7 +75,9 @@ static void light_on(void)
 }
 
 static void animation_stopped(PropertyAnimation *animation, bool finished, void *data) {
+#ifndef PBL_COLOR
   property_animation_destroy(animation);
+#endif
 }
 
 static void animate_layer_bounds(Layer* layer, GRect toRect)
@@ -467,7 +469,7 @@ static void window_load(Window *me) {
   
   action_bar_layer_add_to_window(action_bar, me);
   light_on();
-  update_text();
+  //update_text();
   update_selection();
 }
 
