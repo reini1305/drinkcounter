@@ -3,8 +3,8 @@
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 40,
-  "versionLabel": "6.5",
+  "versionCode": 41,
+  "versionLabel": "6.6",
   "watchapp": {
     "watchface": false
   },
@@ -128,6 +128,36 @@
         "type": "pbi",
         "name": "IMAGE_ACTION_ICON_RESET",
         "file": "images/action_icon_reset.png"
+      },
+      {
+      "type": "pbi",
+      "name": "IMAGE_ACTION_ICON_CROSS_INV",
+      "file": "images/action_icon_cross_inv.png"
+      },
+      {
+      "type": "pbi",
+      "name": "IMAGE_ACTION_ICON_CHECK_INV",
+      "file": "images/action_icon_check_inv.png"
+      },
+      {
+      "type": "pbi",
+      "name": "IMAGE_ACTION_ICON_PLUS_INV",
+      "file": "images/action_icon_plus_inv.png"
+      },
+      {
+      "type": "pbi",
+      "name": "IMAGE_ACTION_ICON_MINUS_INV",
+      "file": "images/action_icon_minus_inv.png"
+      },
+      {
+      "type": "pbi",
+      "name": "IMAGE_ACTION_ICON_RIGHT_INV",
+      "file": "images/action_icon_right_inv.png"
+      },
+      {
+      "type": "pbi",
+      "name": "IMAGE_ACTION_ICON_RESET_INV",
+      "file": "images/action_icon_reset_inv.png"
       },
       {
         "type": "pbi8",

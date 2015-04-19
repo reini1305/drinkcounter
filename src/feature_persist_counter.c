@@ -289,9 +289,9 @@ static void dialog_load(Window *me)
   action_bar_layer_set_icon(conf_action_bar, BUTTON_ID_DOWN, action_icon_cancel);
 
   Layer *layer = window_get_root_layer(me);
-  const int16_t width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
+  const int16_t width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH ;
   
-  conf_text_layer = text_layer_create(GRect(4, 20, width, 160));
+  conf_text_layer = text_layer_create(GRect(0, 20, width, 160));
   text_layer_set_font(conf_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
   text_layer_set_background_color(conf_text_layer, GColorClear);
   text_layer_set_text_alignment(conf_text_layer,GTextAlignmentCenter);
@@ -484,14 +484,21 @@ static void window_unload(Window *window) {
 static void init(void) {
   autoconfig_init();
   app_message_register_inbox_received(in_received_handler);
-
+#ifdef PBL_COLOR
+  action_icon_plus = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_PLUS_INV);
+  action_icon_reset = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RESET_INV);
+  action_icon_right = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RIGHT_INV);
+  action_icon_cancel = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CROSS_INV);
+  action_icon_confirm = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CHECK_INV);
+  action_icon_minus =gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_MINUS_INV);
+#else
   action_icon_plus = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_PLUS);
   action_icon_reset = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RESET);
   action_icon_right = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RIGHT);
   action_icon_cancel = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CROSS);
   action_icon_confirm = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CHECK);
   action_icon_minus =gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_MINUS);
-  
+#endif
   light_timer = app_timer_register(10000,light_off,NULL);
   
   accel_tap_service_subscribe(&accel_tap_handler);
