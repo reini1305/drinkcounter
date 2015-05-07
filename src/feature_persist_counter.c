@@ -24,6 +24,9 @@ static AppTimer *light_timer;
 static Layer *scroll_layer;
 static int16_t width;
 static PropertyAnimation *animation;
+#ifdef PBL_SDK_3
+static StatusBarLayer *status_layer;
+#endif
 
 static TextLayer *header_text_layer;
 
@@ -446,8 +449,16 @@ static void window_load(Window *me) {
 
   Layer *layer = window_get_root_layer(me);
   width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
-
-  header_text_layer = text_layer_create(GRect(3, 0, width, 60));
+  int16_t offset = 0;
+#ifdef PBL_SDK_3
+  status_layer = status_bar_layer_create();
+  // Change the status bar width to make space for the action bar
+  //  GRect frame = GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT);
+  //  layer_set_frame(status_bar_layer_get_layer(status_layer), frame);
+  layer_add_child(layer, status_bar_layer_get_layer(status_layer));
+  offset = STATUS_BAR_LAYER_HEIGHT;
+#endif
+  header_text_layer = text_layer_create(GRect(3, offset, width, 60));
   text_layer_set_font(header_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_background_color(header_text_layer, GColorClear);
   text_layer_set_text_alignment(header_text_layer,GTextAlignmentCenter);
@@ -457,7 +468,7 @@ static void window_load(Window *me) {
   int grid_size_v = width/3;
   
   layer_set_clips(layer,false);
-  scroll_layer = layer_create(GRect(3,64,NUM_DRINK_TYPES/3*width,100));
+  scroll_layer = layer_create(GRect(3,64+offset,NUM_DRINK_TYPES/3*width,100-offset));
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   

@@ -1,10 +1,10 @@
 {
-  "uuid": "703b16db-2e94-4b39-ea83-f3206a254235",
+  "uuid": "ea75de0b-0758-408f-9c3c-4d5d63124b39",
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 41,
-  "versionLabel": "6.6",
+  "versionCode": 42,
+  "versionLabel": "6.7",
   "watchapp": {
     "watchface": false
   },

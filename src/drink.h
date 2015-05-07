@@ -39,7 +39,6 @@ void createDrink(Drink* drink, Layer* parent_layer, uint32_t bitmap_id, int* num
 {
   int text_y = 50;
   int text_height = 100;
-  
   drink->text_layer = text_layer_create(GRect(0, text_y, grid_size_v, text_height));
   drink->font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_30));
   text_layer_set_font(drink->text_layer, drink->font);
