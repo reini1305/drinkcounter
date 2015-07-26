@@ -222,6 +222,11 @@ static void update_selection() {
     case 5:
       deselectDrink(&drinks[settings.drawing_order[4]]);
       selectDrink(&drinks[settings.drawing_order[5]]);
+      animate_layer_bounds(scroll_layer,GRect(3-4*width/3,64,NUM_DRINK_TYPES/3*width,100));
+    break;
+    case 6:
+      deselectDrink(&drinks[settings.drawing_order[5]]);
+      selectDrink(&drinks[settings.drawing_order[6]]);
     break;
     default:
     break;
@@ -472,7 +477,7 @@ static void window_load(Window *me) {
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   
-  uint32_t ressources[NUM_DRINK_TYPES] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT,RESOURCE_ID_IMAGE_CIGARETTE,RESOURCE_ID_IMAGE_WATER};
+  uint32_t ressources[NUM_DRINK_TYPES] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT,RESOURCE_ID_IMAGE_CIGARETTE,RESOURCE_ID_IMAGE_WATER, RESOURCE_ID_IMAGE_COFFEE};
   //unsigned char storage_slots[5] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY,NUM_CIGARETTES_PKEY};
   
   for(int i=0;i<NUM_DRINK_TYPES;i++)
@@ -518,7 +523,6 @@ static void init(void) {
   if(persist_exists(SETTINGS_KEY))
   {
     persist_read_data(SETTINGS_KEY,&settings,sizeof(settings));
-    //APP_LOG(APP_LOG_LEVEL_DEBUG,"in loaded settings...");
   }
   else
   {
@@ -537,12 +541,6 @@ static void init(void) {
   }
   APP_LOG(APP_LOG_LEVEL_DEBUG,"%d,%d,%d,%d,%d,%d,%d\n",settings.drawing_order[0],settings.drawing_order[1],
           settings.drawing_order[2],settings.drawing_order[3],settings.drawing_order[4],settings.drawing_order[5],current_drink);
-  /*for(unsigned int i=0;i<NUM_DRINK_TYPES;i++)
-  {
-    settings.drawing_order[i]=5-i;
-    settings.num_drinks[i] = 0;
-    settings.drink_prices[i] = 0.0;
-  }*/
 
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
@@ -562,9 +560,10 @@ static void init(void) {
     .unload = price_dialog_unload,
   });
   
+#ifdef PBL_SDK_2
   status_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_STATUS_ICON);
   window_set_status_bar_icon(window,status_icon_bitmap);
-
+#endif
   window_stack_push(window, true /* Animated */);
 }
 
@@ -573,21 +572,6 @@ static void deinit(void) {
   tick_timer_service_unsubscribe();
   accel_tap_service_unsubscribe();
   
-  /*window_destroy(window);
-  window_destroy(conf_dialog);
-  window_destroy(price_dialog);
-
-  gbitmap_destroy(action_icon_plus);
-  gbitmap_destroy(action_icon_minus);
-  gbitmap_destroy(action_icon_reset);
-  gbitmap_destroy(action_icon_right);
-  gbitmap_destroy(status_icon_bitmap);
-  gbitmap_destroy(action_icon_cancel);
-  gbitmap_destroy(action_icon_confirm);
-  
-  for (int i=0;i<5; i++) {
-    destroyDrink(&drinks[i]);
-  }*/
   // Save the count into persistent storage on app exit
   persist_write_data(SETTINGS_KEY,&settings,sizeof(settings));
 
