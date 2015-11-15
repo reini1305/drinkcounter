@@ -123,8 +123,10 @@ static float get_ebac()
   unsigned int time_diff = abs(combine1 - combine2);
 
   if(getSize()==1)
-    sum_drinks+=*(drinks[0].num_drinks)/0.33*0.5-*(drinks[0].num_drinks);
+  sum_drinks+=*(drinks[0].num_drinks)/0.33*0.25-*(drinks[0].num_drinks);
   if(getSize()==2)
+    sum_drinks+=*(drinks[0].num_drinks)/0.33*0.5-*(drinks[0].num_drinks);
+  if(getSize()==3)
     sum_drinks+=*(drinks[0].num_drinks)*3.0-*(drinks[0].num_drinks);
   
   float bw = getSex()==0 ? 0.58f:0.49f;
