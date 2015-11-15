@@ -4,9 +4,14 @@
 #include "autoconfig.h"
 
 #ifdef PBL_SDK_3
-#define OFFSET 12
+#define OFFSET_Y 76
 #else
-#define OFFSET 0
+#define OFFSET_Y 64
+#endif
+#ifdef PBL_ROUND
+#define OFFSET_X 24
+#else
+#define OFFSET_X 3
 #endif
 
 // Main Window
@@ -67,7 +72,7 @@ static void light_on(void)
 }
 
 static void animation_stopped(PropertyAnimation *animation, bool finished, void *data) {
-#ifndef PBL_COLOR
+#ifndef PBL_SDK_2
   property_animation_destroy(animation);
 #endif
 }
@@ -186,7 +191,7 @@ static void update_selection() {
     case 0:
       deselectDrink(&drinks[settings.drawing_order[6]]);
       selectDrink(&drinks[settings.drawing_order[0]]);
-      animate_layer_bounds(scroll_layer,GRect(3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(OFFSET_X,OFFSET_Y,NUM_DRINK_TYPES/3*width,100));
     break;
     case 1:
       deselectDrink(&drinks[settings.drawing_order[0]]);
@@ -195,22 +200,22 @@ static void update_selection() {
     case 2:
       deselectDrink(&drinks[settings.drawing_order[1]]);
       selectDrink(&drinks[settings.drawing_order[2]]);
-      animate_layer_bounds(scroll_layer,GRect(3-width/3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(OFFSET_X-width/3,OFFSET_Y,NUM_DRINK_TYPES/3*width,100));
     break;
     case 3:
       deselectDrink(&drinks[settings.drawing_order[2]]);
       selectDrink(&drinks[settings.drawing_order[3]]);
-      animate_layer_bounds(scroll_layer,GRect(3-2*width/3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(OFFSET_X-2*width/3,OFFSET_Y,NUM_DRINK_TYPES/3*width,100));
       break;
     case 4:
       deselectDrink(&drinks[settings.drawing_order[3]]);
       selectDrink(&drinks[settings.drawing_order[4]]);
-      animate_layer_bounds(scroll_layer,GRect(3-3*width/3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(OFFSET_X-3*width/3,OFFSET_Y,NUM_DRINK_TYPES/3*width,100));
     break;
     case 5:
       deselectDrink(&drinks[settings.drawing_order[4]]);
       selectDrink(&drinks[settings.drawing_order[5]]);
-      animate_layer_bounds(scroll_layer,GRect(3-4*width/3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(OFFSET_X-4*width/3,OFFSET_Y,NUM_DRINK_TYPES/3*width,100));
     break;
     case 6:
       deselectDrink(&drinks[settings.drawing_order[5]]);
@@ -441,8 +446,12 @@ static void window_load(Window *me) {
   action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, action_icon_plus);
 
   Layer *layer = window_get_root_layer(me);
-  width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
-  header_text_layer = text_layer_create(GRect(3, 0, width, 60));
+  width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 3 - OFFSET_X;
+#ifdef PBL_ROUND
+  header_text_layer = text_layer_create(GRect(OFFSET_X, 20, width, 60));
+#else
+  header_text_layer = text_layer_create(GRect(OFFSET_X, 0, width, 60));
+#endif
   text_layer_set_font(header_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_background_color(header_text_layer, GColorClear);
   text_layer_set_text_alignment(header_text_layer,GTextAlignmentCenter);
@@ -452,7 +461,7 @@ static void window_load(Window *me) {
   int grid_size_v = width/3;
   
   layer_set_clips(layer,false);
-  scroll_layer = layer_create(GRect(3,64+OFFSET,NUM_DRINK_TYPES/3*width,100-OFFSET));
+  scroll_layer = layer_create(GRect(OFFSET_X,OFFSET_Y,NUM_DRINK_TYPES/3*width,100-OFFSET_Y));
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   
