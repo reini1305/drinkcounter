@@ -2,21 +2,25 @@
 #include "settings.h"
 # include <drink.h>
 #include "autoconfig.h"
-// TODOS:
+
+#ifdef PBL_SDK_3
+#define OFFSET 12
+#else
+#define OFFSET 0
+#endif
 
 // Main Window
 static Window *window;
 
 static Drink drinks[NUM_DRINK_TYPES];
 static Settings settings;
-//static unsigned char drawing_order[5]={0,1,2,3,4};
 
 static GBitmap *action_icon_plus;
 static GBitmap *action_icon_reset;
 static GBitmap *action_icon_right;
-
+#ifdef PBL_SDK_2
 static GBitmap *status_icon_bitmap;
-
+#endif
 static ActionBarLayer *action_bar;
 
 static AppTimer *light_timer;
@@ -24,9 +28,6 @@ static AppTimer *light_timer;
 static Layer *scroll_layer;
 static int16_t width;
 static PropertyAnimation *animation;
-#ifdef PBL_SDK_3
-static StatusBarLayer *status_layer;
-#endif
 
 static TextLayer *header_text_layer;
 
@@ -48,18 +49,6 @@ static int current_price;
 
 static int current_drink = 0;
 static struct tm current_time;
-
-/*static bool send_to_phone_multi(int quote_key, int symbol) {
-  DictionaryIterator *iter;
-  app_message_outbox_begin(&iter);
-  
-  Tuplet tuple = TupletInteger(quote_key, symbol);
-  dict_write_tuplet(iter, &tuple);
-  dict_write_end(iter);
-  
-  app_message_outbox_send();
-  return true;
-}*/
 
 #undef APP_LOG
 
@@ -161,31 +150,30 @@ static void update_text() {
   else
     snprintf(price_string, sizeof(price_string), " ");
   if(sum_drinks<1.0f)
-    text_layer_set_text(header_text_layer,"Drink Counter");
+    snprintf(output_text,sizeof(output_text),"Drink Counter\n%s",price_string);
   else if (getEbac()==false)
-    {
-      int day1 = current_time.tm_yday;
-      int hour1 = current_time.tm_hour;
-      int min1 = current_time.tm_min;
-      long int combine1 = min1+hour1*60+day1*24*60;
-      
-      int day2 = settings.last_drink_time.tm_yday;
-      int hour2 = settings.last_drink_time.tm_hour;
-      int min2 = settings.last_drink_time.tm_min;
-      long int combine2 = min2+hour2*60+day2*24*60;
-      
-      unsigned int time_diff = abs(combine1 - combine2);
-      
-      snprintf(output_text, sizeof(output_text), "Last drink: %d %s\n%s",time_diff>60?time_diff/60:time_diff,
-               time_diff>60?"h":"m",price_string);
-      text_layer_set_text(header_text_layer,output_text);
-    }
-    else
-    {
-        snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d\n%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
-                 price_string);
-      text_layer_set_text(header_text_layer,output_text);
-    }
+  {
+    int day1 = current_time.tm_yday;
+    int hour1 = current_time.tm_hour;
+    int min1 = current_time.tm_min;
+    long int combine1 = min1+hour1*60+day1*24*60;
+    
+    int day2 = settings.last_drink_time.tm_yday;
+    int hour2 = settings.last_drink_time.tm_hour;
+    int min2 = settings.last_drink_time.tm_min;
+    long int combine2 = min2+hour2*60+day2*24*60;
+    
+    unsigned int time_diff = abs(combine1 - combine2);
+    
+    snprintf(output_text, sizeof(output_text), "Last drink: %d %s\n%s",time_diff>60?time_diff/60:time_diff,
+             time_diff>60?"h":"m",price_string);
+  }
+  else
+  {
+      snprintf(output_text,sizeof(output_text),"EBAC: %d.%03d\n%s",(int)ebac,(int)(ebac*1000.f)-((int)ebac)*1000,
+               price_string);
+  }
+  text_layer_set_text(header_text_layer,output_text);
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
@@ -196,9 +184,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 static void update_selection() {
   switch (current_drink) {
     case 0:
-      deselectDrink(&drinks[settings.drawing_order[5]]);
+      deselectDrink(&drinks[settings.drawing_order[6]]);
       selectDrink(&drinks[settings.drawing_order[0]]);
-      animate_layer_bounds(scroll_layer,GRect(3,64,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
     break;
     case 1:
       deselectDrink(&drinks[settings.drawing_order[0]]);
@@ -207,22 +195,22 @@ static void update_selection() {
     case 2:
       deselectDrink(&drinks[settings.drawing_order[1]]);
       selectDrink(&drinks[settings.drawing_order[2]]);
-      animate_layer_bounds(scroll_layer,GRect(3-width/3,64,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3-width/3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
     break;
     case 3:
       deselectDrink(&drinks[settings.drawing_order[2]]);
       selectDrink(&drinks[settings.drawing_order[3]]);
-      animate_layer_bounds(scroll_layer,GRect(3-2*width/3,64,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3-2*width/3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
       break;
     case 4:
       deselectDrink(&drinks[settings.drawing_order[3]]);
       selectDrink(&drinks[settings.drawing_order[4]]);
-      animate_layer_bounds(scroll_layer,GRect(3-3*width/3,64,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3-3*width/3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
     break;
     case 5:
       deselectDrink(&drinks[settings.drawing_order[4]]);
       selectDrink(&drinks[settings.drawing_order[5]]);
-      animate_layer_bounds(scroll_layer,GRect(3-4*width/3,64,NUM_DRINK_TYPES/3*width,100));
+      animate_layer_bounds(scroll_layer,GRect(3-4*width/3,64+OFFSET,NUM_DRINK_TYPES/3*width,100));
     break;
     case 6:
       deselectDrink(&drinks[settings.drawing_order[5]]);
@@ -454,16 +442,7 @@ static void window_load(Window *me) {
 
   Layer *layer = window_get_root_layer(me);
   width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
-  int16_t offset = 0;
-#ifdef PBL_SDK_3
-  status_layer = status_bar_layer_create();
-  // Change the status bar width to make space for the action bar
-  //  GRect frame = GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT);
-  //  layer_set_frame(status_bar_layer_get_layer(status_layer), frame);
-  layer_add_child(layer, status_bar_layer_get_layer(status_layer));
-  offset = STATUS_BAR_LAYER_HEIGHT;
-#endif
-  header_text_layer = text_layer_create(GRect(3, offset, width, 60));
+  header_text_layer = text_layer_create(GRect(3, 0, width, 60));
   text_layer_set_font(header_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_background_color(header_text_layer, GColorClear);
   text_layer_set_text_alignment(header_text_layer,GTextAlignmentCenter);
@@ -473,7 +452,7 @@ static void window_load(Window *me) {
   int grid_size_v = width/3;
   
   layer_set_clips(layer,false);
-  scroll_layer = layer_create(GRect(3,64+offset,NUM_DRINK_TYPES/3*width,100-offset));
+  scroll_layer = layer_create(GRect(3,64+OFFSET,NUM_DRINK_TYPES/3*width,100-OFFSET));
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
   
