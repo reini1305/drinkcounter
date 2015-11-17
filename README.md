@@ -10,8 +10,8 @@ The app can be found in the store: https://apps.getpebble.com/applications/52f4c
 #Screenshots
 <img src="https://assets.getpebble.com/api/file/x7pJhAQGmS8YlBIiAjTA/convert?cache=true&w=144&h=168&fit="></img>
 <img src="https://assets.getpebble.com/api/file/ZGslSMuTQJabNOLN7eHP/convert?cache=true&w=144&h=168&fit="></img>
-<img src="https://github.com/reini1305/drinkcounter/raw/master/store/pebble-screenshot_2015-05-07_18-36-57.png></img>
-<img src="https://github.com/reini1305/drinkcounter/raw/master/store/pebble_screenshot_2015-11-15_18-51-33.png></img>
+<img src="https://github.com/reini1305/drinkcounter/raw/master/store/pebble-screenshot_2015-05-07_18-36-57.png"></img>
+<img src="https://github.com/reini1305/drinkcounter/raw/master/store/pebble_screenshot_2015-11-15_18-51-33.png"></img>
 
 #Features
 - keep track of drink, water, coffee and cigarette consumation
