@@ -1,0 +1,4 @@
+[submodule "autoconfig"]
+	path = pebble-autoconfig
+	url = https://github.com/gregoiresage/pebble-autoconfig.git
+	branch = slate
