@@ -490,7 +490,7 @@ static void window_unload(Window *window) {
 static void init(void) {
   autoconfig_init();
   app_message_register_inbox_received(in_received_handler);
-#ifdef PBL_COLOR
+#ifdef PBL_SDK_3
   action_icon_plus = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_PLUS_INV);
   action_icon_reset = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RESET_INV);
   action_icon_right = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RIGHT_INV);
