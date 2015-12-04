@@ -488,7 +488,7 @@ static void window_unload(Window *window) {
 }
 
 static void init(void) {
-  autoconfig_init();
+  autoconfig_init(300,100);
   app_message_register_inbox_received(in_received_handler);
 #ifdef PBL_SDK_3
   action_icon_plus = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_PLUS_INV);
