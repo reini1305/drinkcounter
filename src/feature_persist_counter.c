@@ -3,11 +3,7 @@
 # include <drink.h>
 #include "autoconfig.h"
 
-#ifdef PBL_SDK_3
 #define OFFSET_Y 76
-#else
-#define OFFSET_Y 64
-#endif
 #ifdef PBL_ROUND
 #define OFFSET_X 24
 #else
@@ -23,9 +19,6 @@ static Settings settings;
 static GBitmap *action_icon_plus;
 static GBitmap *action_icon_reset;
 static GBitmap *action_icon_right;
-#ifdef PBL_SDK_2
-static GBitmap *status_icon_bitmap;
-#endif
 static ActionBarLayer *action_bar;
 
 static AppTimer *light_timer;
@@ -55,9 +48,12 @@ static int current_price;
 static int current_drink = 0;
 static struct tm current_time;
 
-#undef APP_LOG
+static bool timeline_ready;
 
-#define APP_LOG(level, fmt, args... )
+//#undef APP_LOG
+
+//#define APP_LOG(level, fmt, args... )
+
 
 static void light_off(void *data)
 {
@@ -72,9 +68,7 @@ static void light_on(void)
 }
 
 static void animation_stopped(PropertyAnimation *animation, bool finished, void *data) {
-#ifndef PBL_SDK_2
-  property_animation_destroy(animation);
-#endif
+
 }
 
 static void animate_layer_bounds(Layer* layer, GRect toRect)
@@ -94,6 +88,21 @@ static float get_sum_drinks()
     sum_drinks+=*(drinks[i].num_drinks);
   }
   return sum_drinks;
+}
+
+void phone_send_pin() {
+  if (timeline_ready) {
+    // begin iterator
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    // write data
+    dict_write_uint32(iter, 17, (int)get_sum_drinks());
+    dict_write_uint32(iter,18, current_drink);
+    dict_write_end(iter);
+    // send
+    int res = app_message_outbox_send();
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Pin Sent: %d", res);
+  }
 }
 
 static float get_price_drinks()
@@ -185,7 +194,9 @@ static void update_text() {
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
   autoconfig_in_received_handler(iter, context);
+  timeline_ready = true;
   update_text();
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Communication ready");
 }
 
 static void update_selection() {
@@ -262,6 +273,7 @@ static void increment_click_handler(ClickRecognizerRef recognizer, void *context
   }
   increaseCounter(&drinks[settings.drawing_order[current_drink]]);
   update_text();
+  phone_send_pin();
 }
 
 // Confirmation Dialog
@@ -489,22 +501,16 @@ static void window_unload(Window *window) {
 
 static void init(void) {
   autoconfig_init(300,100);
+  timeline_ready=false;
   app_message_register_inbox_received(in_received_handler);
-#ifdef PBL_SDK_3
+
   action_icon_plus = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_PLUS_INV);
   action_icon_reset = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RESET_INV);
   action_icon_right = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RIGHT_INV);
   action_icon_cancel = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CROSS_INV);
   action_icon_confirm = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CHECK_INV);
   action_icon_minus =gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_MINUS_INV);
-#else
-  action_icon_plus = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_PLUS);
-  action_icon_reset = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RESET);
-  action_icon_right = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_RIGHT);
-  action_icon_cancel = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CROSS);
-  action_icon_confirm = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_CHECK);
-  action_icon_minus =gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_MINUS);
-#endif
+
   light_timer = app_timer_register(10000,light_off,NULL);
   
   accel_tap_service_subscribe(&accel_tap_handler);
@@ -550,10 +556,6 @@ static void init(void) {
     .unload = price_dialog_unload,
   });
   
-#ifdef PBL_SDK_2
-  status_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_STATUS_ICON);
-  window_set_status_bar_icon(window,status_icon_bitmap);
-#endif
   window_stack_push(window, true /* Animated */);
 }
 
