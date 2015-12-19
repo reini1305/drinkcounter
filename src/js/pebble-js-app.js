@@ -8,11 +8,11 @@ var drinkPIN = {
     "title": "One beer!",
     "subtitle": "",
     "body": "Brought to you by Drink Counter",
-    "primaryColor": "White",
-    "secondaryColor": "White",
+    "primaryColor": "black",
+    "secondaryColor": "black",
     "tinyIcon": "system://images/MUSIC_EVENT",
     "largeIcon": "system://images/MUSIC_EVENT",
-    "backgroundColor": "#0000FF"
+    "backgroundColor": "chromeyellow"
   },
   "actions": [
               {
@@ -121,25 +121,25 @@ Pebble.addEventListener('appmessage', function(e) {
                         // check which drink it was
                         switch (e.payload.drink_id) {
                         case 0:
-                          drinkPIN.layout.title = "One Beer!";
+                          drinkPIN.layout.title = "One Beer";
                         break;
                         case 1:
-                        drinkPIN.layout.title = "One Wine!";
+                        drinkPIN.layout.title = "One Wine";
                         break;
                         case 2:
-                        drinkPIN.layout.title = "One Cocktail!";
+                        drinkPIN.layout.title = "One Cocktail";
                         break;
                         case 3:
-                        drinkPIN.layout.title = "One Shot!";
+                        drinkPIN.layout.title = "One Shot";
                         break;
                         case 4:
-                        drinkPIN.layout.title = "One Cigarette!";
+                        drinkPIN.layout.title = "One Cigarette";
                         break;
                         case 5:
-                        drinkPIN.layout.title = "One Water!";
+                        drinkPIN.layout.title = "One Water";
                         break;
                         case 6:
-                        drinkPIN.layout.title = "One Coffee!";
+                        drinkPIN.layout.title = "One Coffee";
                         break;
                         }
                         drinkPIN.layout.subtitle = "(Alcoholic) drinks: " + e.payload.num_drinks;
