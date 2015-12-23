@@ -93,107 +93,108 @@
     "media": [
       {
         "menuIcon": true,
-        "type": "png",
+        "type": "bitmap",
         "name": "IMAGE_MENU_ICON",
+        "memoryFormat": "1Bit",
         "file": "images/logo.png"
       },
       {
-        "type": "png",
+        "type": "bitmap",
         "name": "IMAGE_STATUS_ICON",
         "file": "images/status_icon.png"
       },
       {
-        "type": "pbi",
+        "type": "bitmap",
         "name": "IMAGE_ACTION_ICON_CROSS",
         "file": "images/action_icon_cross.png"
       },
       {
-        "type": "pbi",
+        "type": "bitmap",
         "name": "IMAGE_ACTION_ICON_CHECK",
         "file": "images/action_icon_check.png"
       },
       {
-        "type": "pbi",
+        "type": "bitmap",
         "name": "IMAGE_ACTION_ICON_PLUS",
         "file": "images/action_icon_plus.png"
       },
       {
-        "type": "pbi",
+        "type": "bitmap",
         "name": "IMAGE_ACTION_ICON_MINUS",
         "file": "images/action_icon_minus.png"
       },
       {
-        "type": "pbi",
+        "type": "bitmap",
         "name": "IMAGE_ACTION_ICON_RIGHT",
         "file": "images/action_icon_right.png"
       },
       {
-        "type": "pbi",
+        "type": "bitmap",
         "name": "IMAGE_ACTION_ICON_RESET",
         "file": "images/action_icon_reset.png"
       },
       {
-      "type": "pbi",
+      "type": "bitmap",
       "name": "IMAGE_ACTION_ICON_CROSS_INV",
       "file": "images/action_icon_cross_inv.png"
       },
       {
-      "type": "pbi",
+      "type": "bitmap",
       "name": "IMAGE_ACTION_ICON_CHECK_INV",
       "file": "images/action_icon_check_inv.png"
       },
       {
-      "type": "pbi",
+      "type": "bitmap",
       "name": "IMAGE_ACTION_ICON_PLUS_INV",
       "file": "images/action_icon_plus_inv.png"
       },
       {
-      "type": "pbi",
+      "type": "bitmap",
       "name": "IMAGE_ACTION_ICON_MINUS_INV",
       "file": "images/action_icon_minus_inv.png"
       },
       {
-      "type": "pbi",
+      "type": "bitmap",
       "name": "IMAGE_ACTION_ICON_RIGHT_INV",
       "file": "images/action_icon_right_inv.png"
       },
       {
-      "type": "pbi",
+      "type": "bitmap",
       "name": "IMAGE_ACTION_ICON_RESET_INV",
       "file": "images/action_icon_reset_inv.png"
       },
       {
-        "type": "pbi8",
+        "type": "bitmap",
         "name": "IMAGE_BEER",
         "file": "images/beer.png"
       },
       {
-        "type": "pbi8",
+        "type": "bitmap",
         "name": "IMAGE_WINE",
         "file": "images/wine.png"
       },
       {
-        "type": "pbi8",
+        "type": "bitmap",
         "name": "IMAGE_COCKTAIL",
         "file": "images/cocktail.png"
       },
       {
-        "type": "pbi8",
+        "type": "bitmap",
         "name": "IMAGE_WATER",
         "file": "images/water.png"
       },
       {
-        "type": "pbi8",
+        "type": "bitmap",
         "name": "IMAGE_SHOT",
         "file": "images/shot.png"
       },
       {
-        "type": "pbi8",
+        "type": "bitmap",
         "name": "IMAGE_CIGARETTE",
         "file": "images/smoking.png"
       },
       {
-        "type": "pbi8",
+        "type": "bitmap",
         "name": "IMAGE_COFFEE",
         "file": "images/coffee.png"
       },
