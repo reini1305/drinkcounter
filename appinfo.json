@@ -3,8 +3,8 @@
   "shortName": "Drink Counter",
   "longName": "Drink Counter",
   "companyName": "Christian Reinbacher",
-  "versionCode": 47,
-  "versionLabel": "6.12",
+  "versionCode": 48,
+  "versionLabel": "6.13",
   "watchapp": {
     "watchface": false
   },

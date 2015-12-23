@@ -97,7 +97,7 @@ void phone_send_pin() {
     app_message_outbox_begin(&iter);
     // write data
     dict_write_uint32(iter, 17, (int)get_sum_drinks());
-    dict_write_uint32(iter,18, current_drink);
+    dict_write_uint32(iter,18, settings.drawing_order[current_drink]);
     dict_write_end(iter);
     // send
     int res = app_message_outbox_send();
