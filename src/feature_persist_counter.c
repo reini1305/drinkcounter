@@ -131,17 +131,17 @@ static float get_ebac()
   
   unsigned int time_diff = abs(combine1 - combine2);
 
-  if(getSize()==1)
+  if(settings.beer_size==1)
   sum_drinks+=*(drinks[0].num_drinks)/0.33*0.25-*(drinks[0].num_drinks);
-  if(getSize()==2)
+  if(settings.beer_size==2)
     sum_drinks+=*(drinks[0].num_drinks)/0.33*0.5-*(drinks[0].num_drinks);
-  if(getSize()==3)
+  if(settings.beer_size==3)
     sum_drinks+=*(drinks[0].num_drinks)*3.0-*(drinks[0].num_drinks);
   
-  float bw = getSex()==0 ? 0.58f:0.49f;
-  float scale_factor = getUnit()==0? 1.0f:0.453592f; // 0 = kg, 1 = pounds
-  float multiplication = getOutput()==0? 10.f:1.f; //0 = %o, 1 = %
-  return( ((0.806f * sum_drinks * 1.2f)/(bw*(float)getWeight()*scale_factor) - (0.017f * (time_diff/60.f)))*multiplication);
+  float bw = settings.sex==0 ? 0.58f:0.49f;
+  float scale_factor = settings.unit==0? 1.0f:0.453592f; // 0 = kg, 1 = pounds
+  float multiplication = settings.output==0? 10.f:1.f; //0 = %o, 1 = %
+  return( ((0.806f * sum_drinks * 1.2f)/(bw*(float)settings.weight*scale_factor) - (0.017f * (time_diff/60.f)))*multiplication);
 }
 
 static float max(float val1,float val2)
@@ -167,7 +167,7 @@ static void update_text() {
     snprintf(price_string, sizeof(price_string), " ");
   if(sum_drinks<1.0f)
     snprintf(output_text,sizeof(output_text),"Drink Counter\n%s",price_string);
-  else if (getEbac()==false)
+  else if (settings.estimate_bac==false)
   {
     int day1 = current_time.tm_yday;
     int hour1 = current_time.tm_hour;
@@ -193,10 +193,25 @@ static void update_text() {
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
-  autoconfig_in_received_handler(iter, context);
+  
+  // Read preferences
+  Tuple *t = dict_find(iter, MESSAGE_KEY_ebac);
+  if(t) {
+    settings.estimate_bac = t->value->int32 == 1;
+  }
+  if((t = dict_find(iter, MESSAGE_KEY_sex)))
+    settings.sex = t->value->cstring[0]-'0';
+  if((t = dict_find(iter, MESSAGE_KEY_unit)))
+  settings.unit = t->value->cstring[0]-'0';
+  if((t = dict_find(iter, MESSAGE_KEY_size)))
+  settings.beer_size = t->value->cstring[0]-'0';
+  if((t = dict_find(iter, MESSAGE_KEY_output)))
+  settings.output = t->value->cstring[0]-'0';
+  if((t = dict_find(iter, MESSAGE_KEY_weight)))
+  settings.weight = t->value->int32;
   timeline_ready = true;
   update_text();
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Communication ready");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d",settings.output);
 }
 
 static void update_selection() {
@@ -500,7 +515,7 @@ static void window_unload(Window *window) {
 }
 
 static void init(void) {
-  autoconfig_init(300,100);
+  app_message_open(300,100);
   timeline_ready=false;
   app_message_register_inbox_received(in_received_handler);
 
@@ -518,12 +533,10 @@ static void init(void) {
   // Get the count from persistent storage for use if it exists, otherwise use the default
   if(persist_exists(SETTINGS_KEY))
   {
-    persist_read_data(SETTINGS_KEY,&settings,sizeof(settings));
+    persist_read_data(SETTINGS_KEY,&settings,sizeof(Settings));
   }
   else
   {
-    if(persist_exists(OLD_SETTINGS_KEY))
-      persist_delete(OLD_SETTINGS_KEY);
     // set default values
     settings.drink_meters=0;
     settings.first_drink_time=current_time;
@@ -534,9 +547,15 @@ static void init(void) {
       settings.num_drinks[i] = 0;
       settings.drink_prices[i] = 0.0;
     }
+    settings.beer_size=1;
+    settings.estimate_bac=0;
+    settings.unit=0;
+    settings.weight=75;
+    settings.output=0;
+    settings.sex=0;
   }
-  APP_LOG(APP_LOG_LEVEL_DEBUG,"%d,%d,%d,%d,%d,%d,%d\n",settings.drawing_order[0],settings.drawing_order[1],
-          settings.drawing_order[2],settings.drawing_order[3],settings.drawing_order[4],settings.drawing_order[5],current_drink);
+//  APP_LOG(APP_LOG_LEVEL_DEBUG,"%d,%d,%d,%d,%d,%d,%d\n",settings.drawing_order[0],settings.drawing_order[1],
+//          settings.drawing_order[2],settings.drawing_order[3],settings.drawing_order[4],settings.drawing_order[5],current_drink);
 
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
@@ -565,9 +584,8 @@ static void deinit(void) {
   accel_tap_service_unsubscribe();
   
   // Save the count into persistent storage on app exit
-  persist_write_data(SETTINGS_KEY,&settings,sizeof(settings));
-
-  autoconfig_deinit();
+  persist_write_data(SETTINGS_KEY,&settings,sizeof(Settings));
+  
 }
 
 int main(void) {

@@ -107,6 +107,12 @@ function deleteSharedPin(pin, topics, apiKey, callback) {
 
 /****************************** end timeline lib ******************************/
 
+
+//// CONFIG
+var Clay = require('./clay');
+var clayConfig = require('./config.json');
+var clay = new Clay(clayConfig);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // App Message
 //

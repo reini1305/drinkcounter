@@ -1,0 +1,113 @@
+[
+{
+  "type": "heading",
+  "id": "main-heading",
+  "defaultValue": "Drink Counter Configuration",
+  "size": 1
+},
+{
+  "type": "text",
+  "defaultValue": "If you like what I'm doing, consider a donation: <a href='https://pledgie.com/campaigns/28156'><img alt='Click here to lend your support to: Christian Reinbachers Pebble Apps and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/28156.png?skin_name=chrome' border='0' ></a>",
+  "id": "donationtext"
+},
+{
+  "type": "section",
+  "items": [
+            {
+            "type": "heading",
+            "defaultValue": "Settings"
+            },
+            {
+            "type": "toggle",
+            "appKey": "ebac",
+            "label": "Estimate blood alcohol level",
+            "defaultValue": false
+            },
+            {
+            "type": "select",
+            "appKey": "output",
+            "defaultValue": "0",
+            "label": "EBAC output",
+            "options": [
+                        {
+                        "label": "Per mille",
+                        "value": "0"
+                        },
+                        {
+                        "label": "Per cent",
+                        "value": "1"
+                        }
+                        ]
+            },            {
+            "type": "select",
+            "appKey": "sex",
+            "defaultValue": "0",
+            "label": "Gender",
+            "options": [
+                        {
+                        "label": "Male",
+                        "value": "0"
+                        },
+                        {
+                        "label": "Female",
+                        "value": "1"
+                        }
+                        ]
+            },
+            {
+            "type": "slider",
+            "appKey": "weight",
+            "defaultValue": 75,
+            "label": "Weight",
+            "description": "",
+            "min": 0,
+            "max": 300,
+            "step": 1
+            },
+            {
+            "type": "select",
+            "appKey": "unit",
+            "defaultValue": "0",
+            "label": "Weight Unit",
+            "options": [
+                        {
+                        "label": "Kilograms",
+                        "value": "0"
+                        },
+                        {
+                        "label": "Pounds",
+                        "value": "1"
+                        }
+                        ]
+            },
+            {
+            "type": "select",
+            "appKey": "size",
+            "defaultValue": "1",
+            "label": "Beer Size",
+            "options": [
+                        {
+                        "label": "Tiny (0.25l)",
+                        "value": "0"
+                        },
+                        {
+                        "label": "Regular (0.33l)",
+                        "value": "1"
+                        },
+                        {
+                        "label": "Large (0.5l)",
+                        "value": "2"
+                        },
+                        {
+                        "label": "Oktoberfest (1.0l)",
+                        "value": "3"
+                        }
+                        ]
+            }
+          ]
+},
+{
+  "type": "submit",
+  "defaultValue": "Save"
+}
+]

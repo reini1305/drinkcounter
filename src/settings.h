@@ -10,8 +10,7 @@
 #define drink_counter_settings_h
 
 // This is a custom defined key for saving our count field
-#define OLD_SETTINGS_KEY 19
-#define SETTINGS_KEY 20
+#define SETTINGS_KEY 21
 
 // You can define defaults for values in persistent storage
 #define NUM_DRINKS_DEFAULT 0
@@ -25,6 +24,12 @@ typedef struct Settings
   struct tm first_drink_time;
   int drink_meters;
   float drink_prices[NUM_DRINK_TYPES];
+  bool estimate_bac;
+  bool sex;
+  int weight;
+  bool unit;
+  uint8_t beer_size;
+  bool output;
 }Settings;
 
 
