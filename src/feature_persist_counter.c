@@ -1,7 +1,6 @@
 #include "pebble.h"
 #include "settings.h"
 # include <drink.h>
-#include "autoconfig.h"
 
 #define OFFSET_Y 76
 #ifdef PBL_ROUND

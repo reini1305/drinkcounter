@@ -157,3 +157,9 @@ Pebble.addEventListener('appmessage', function(e) {
                                       });
                         }
                         });
+// loaded and ready
+Pebble.addEventListener('ready', function(e) {
+                        console.log("JS ready!");
+//                        console.log(keys.READY);
+                        Pebble.sendAppMessage({ 'ready': true });
+                        });

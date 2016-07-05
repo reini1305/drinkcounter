@@ -1,5 +1,5 @@
 {
-  "version": "6.15.0",
+  "version": "6.16.0",
   "author": "Christian Reinbacher",
   "private": true,
   "dependencies": {},
@@ -138,7 +138,8 @@
       "lat": 15,
       "output": 10,
       "unit": 9,
-      "size": 8
+      "size": 8,
+      "ready": 0
     },
     "enableMultiJS": true,
     "displayName": "Drink Counter",
