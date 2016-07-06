@@ -2,7 +2,9 @@
   "version": "6.16.0",
   "author": "Christian Reinbacher",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "pebble-clay": "^1.0.1"
+  },
   "keywords": [
     "pebble-app"
   ],
