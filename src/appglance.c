@@ -1,6 +1,7 @@
 
 #include "appglance.h"
 
+#if PBL_API_EXISTS(app_glance_reload)
 static void prv_update_app_glance(AppGlanceReloadSession *session,
                                   size_t limit, void *context) {
   // This should never happen, but developers should always ensure they are
@@ -16,8 +17,8 @@ static void prv_update_app_glance(AppGlanceReloadSession *session,
     // NOTE: When .icon_resource_id is not set, the app's default icon is used
     const AppGlanceSlice entry = (AppGlanceSlice) {
       .layout = {
-        .icon_resource_id = APP_GLANCE_SLICE_DEFAULT_ICON,
-        .template_string = message
+        .icon = APP_GLANCE_SLICE_DEFAULT_ICON,
+        .subtitle_template_string = message
       },
       .expiration_time = expiration_time+3600*24*7
     };
@@ -30,8 +31,10 @@ static void prv_update_app_glance(AppGlanceReloadSession *session,
     }
   } 
 }
+#endif
 
 void update_app_glance(Drink* drinks) {
+#if PBL_API_EXISTS(app_glance_reload)
   char sum_drink_text[30];
   int num_drinks = getSumDrinks(drinks);
   if(num_drinks>0) {
@@ -39,4 +42,5 @@ void update_app_glance(Drink* drinks) {
     app_glance_reload(prv_update_app_glance,sum_drink_text);
   } else
     app_glance_reload(prv_update_app_glance,NULL);
+#endif
 }
