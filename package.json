@@ -1,9 +1,9 @@
 {
-  "version": "6.15.0",
+  "version": "6.16.0",
   "author": "Christian Reinbacher",
   "private": true,
   "dependencies": {
-    "pebble-clay": "^0.1.37"
+    "pebble-clay": "^1.0.1"
   },
   "keywords": [
     "pebble-app"
@@ -140,7 +140,8 @@
       "lat": 15,
       "output": 10,
       "unit": 9,
-      "size": 8
+      "size": 8,
+      "ready": 0
     },
     "enableMultiJS": true,
     "displayName": "Drink Counter",
@@ -152,7 +153,8 @@
     "targetPlatforms": [
       "aplite",
       "basalt",
-      "chalk"
+      "chalk",
+      "diorite"
     ],
     "capabilities": [
       "configurable"

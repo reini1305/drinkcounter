@@ -1,7 +1,8 @@
 #include "pebble.h"
 #include "settings.h"
-# include <drink.h>
-#include "autoconfig.h"
+#include "drink.h"
+#include "appglance.h"
+
 
 #define OFFSET_Y 76
 #ifdef PBL_ROUND
@@ -80,15 +81,7 @@ static void animate_layer_bounds(Layer* layer, GRect toRect)
   animation_schedule((Animation*)animation);
 }
 
-static float get_sum_drinks()
-{
-  float sum_drinks=0;
-  for (int i=0; i<4; i++)
-  {
-    sum_drinks+=*(drinks[i].num_drinks);
-  }
-  return sum_drinks;
-}
+
 
 void phone_send_pin() {
   if (timeline_ready) {
@@ -96,7 +89,7 @@ void phone_send_pin() {
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
     // write data
-    dict_write_uint32(iter, 17, (int)get_sum_drinks());
+    dict_write_uint32(iter, 17, (int)getSumDrinks(drinks));
     dict_write_uint32(iter,18, settings.drawing_order[current_drink]);
     dict_write_end(iter);
     // send
@@ -105,19 +98,9 @@ void phone_send_pin() {
   }
 }
 
-static float get_price_drinks()
-{
-  float sum_drinks=0;
-  for (int i=0; i<NUM_DRINK_TYPES; i++)
-  {
-    sum_drinks+=*(drinks[i].num_drinks)*settings.drink_prices[i];
-  }
-  return sum_drinks;
-}
-
 static float get_ebac()
 {
-  float sum_drinks = get_sum_drinks();
+  float sum_drinks = getSumDrinks(drinks);
   
   int day1 = current_time.tm_yday;
   int hour1 = current_time.tm_hour;
@@ -149,6 +132,16 @@ static float max(float val1,float val2)
   return(val1>val2? val1:val2);
 }
 
+static float get_price_drinks()
+{
+  float sum_drinks=0;
+  for (int i=0; i<NUM_DRINK_TYPES; i++)
+  {
+    sum_drinks+=*(drinks[i].num_drinks)*settings.drink_prices[i];
+  }
+  return sum_drinks;
+}
+
 static void update_text() {
   static char output_text[35];
   static char price_string[15];
@@ -158,7 +151,7 @@ static void update_text() {
     redrawText(&drinks[i]);
   }
   float ebac = max(get_ebac(),0.0f);
-  float sum_drinks = get_sum_drinks();
+  float sum_drinks = getSumDrinks(drinks);
   float price = get_price_drinks();
   
   if (price>0.f)
@@ -277,7 +270,7 @@ static void reset_counters(Window *me)
 
 static void increment_click_handler(ClickRecognizerRef recognizer, void *context) {
   light_on();
-  float sum_drinks=get_sum_drinks();
+  float sum_drinks=getSumDrinks(drinks);
   // We started drinking
   if(sum_drinks<1.0f)
     settings.first_drink_time = current_time;
@@ -580,6 +573,7 @@ static void init(void) {
 
 static void deinit(void) {
   
+  update_app_glance(drinks);
   tick_timer_service_unsubscribe();
   accel_tap_service_unsubscribe();
   
