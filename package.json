@@ -126,6 +126,13 @@
           "file": "fonts/digital_regular.ttf",
           "compatability": "2.7"
         }
+      ],
+      "publishedMedia": [
+        {
+          "name": "ICON",
+          "id": 1,
+          "glance": "IMAGE_MENU_ICON"
+        }
       ]
     },
     "projectType": "native",
