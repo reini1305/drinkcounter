@@ -13,10 +13,14 @@
     "resources": {
       "media": [
         {
-          "memoryFormat": "1Bit",
           "menuIcon": true,
           "type": "bitmap",
-          "name": "IMAGE_MENU_ICON",
+          "name": "IMAGE_LOGO",
+          "file": "images/logo.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_GLANCE",
           "file": "images/logo.png"
         },
         {
@@ -130,8 +134,8 @@
       "publishedMedia": [
         {
           "name": "ICON",
-          "id": 1,
-          "glance": "IMAGE_MENU_ICON"
+          "id": 12,
+          "glance": "IMAGE_GLANCE"
         }
       ]
     },
