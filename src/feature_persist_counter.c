@@ -3,7 +3,11 @@
 #include "drink.h"
 #include "appglance.h"
 
+#ifdef PBL_PLATFORM_EMERY
+#define OFFSET_Y 136
+#else
 #define OFFSET_Y 76
+#endif
 #ifdef PBL_ROUND
 #define OFFSET_X 24
 #else
@@ -100,17 +104,17 @@ void phone_send_pin() {
 static float get_ebac()
 {
   float sum_drinks = getSumDrinks(drinks);
-  
+
   int day1 = current_time.tm_yday;
   int hour1 = current_time.tm_hour;
   int min1 = current_time.tm_min;
   long int combine1 = min1+hour1*60+day1*24*60;
-  
+
   int day2 = settings.first_drink_time.tm_yday;
   int hour2 = settings.first_drink_time.tm_hour;
   int min2 = settings.first_drink_time.tm_min;
   long int combine2 = min2+hour2*60+day2*24*60;
-  
+
   unsigned int time_diff = abs(combine1 - combine2);
 
   if(settings.beer_size==1)
@@ -119,7 +123,7 @@ static float get_ebac()
     sum_drinks+=*(drinks[0].num_drinks)/0.33*0.5-*(drinks[0].num_drinks);
   if(settings.beer_size==3)
     sum_drinks+=*(drinks[0].num_drinks)*3.0-*(drinks[0].num_drinks);
-  
+
   float bw = settings.sex==0 ? 0.58f:0.49f;
   float scale_factor = settings.unit==0? 1.0f:0.453592f; // 0 = kg, 1 = pounds
   float multiplication = settings.output==0? 10.f:1.f; //0 = %o, 1 = %
@@ -144,7 +148,7 @@ static float get_price_drinks()
 static void update_text() {
   static char output_text[35];
   static char price_string[15];
-  
+
   for (int i=0; i<NUM_DRINK_TYPES; i++)
   {
     redrawText(&drinks[i]);
@@ -152,7 +156,7 @@ static void update_text() {
   float ebac = max(get_ebac(),0.0f);
   float sum_drinks = getSumDrinks(drinks);
   float price = get_price_drinks();
-  
+
   if (price>0.f)
     snprintf(price_string,sizeof(price_string),"Price: %d.%d0",(int)price,(int)(price*10.f)-((int)price)*10);
   else
@@ -165,14 +169,14 @@ static void update_text() {
     int hour1 = current_time.tm_hour;
     int min1 = current_time.tm_min;
     long int combine1 = min1+hour1*60+day1*24*60;
-    
+
     int day2 = settings.last_drink_time.tm_yday;
     int hour2 = settings.last_drink_time.tm_hour;
     int min2 = settings.last_drink_time.tm_min;
     long int combine2 = min2+hour2*60+day2*24*60;
-    
+
     unsigned int time_diff = abs(combine1 - combine2);
-    
+
     snprintf(output_text, sizeof(output_text), "Last drink: %d %s\n%s",time_diff>60?time_diff/60:time_diff,
              time_diff>60?"h":"m",price_string);
   }
@@ -185,7 +189,7 @@ static void update_text() {
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
-  
+
   // Read preferences
   Tuple *t = dict_find(iter, MESSAGE_KEY_ebac);
   if(t) {
@@ -248,7 +252,7 @@ static void update_selection() {
 }
 
 void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
-  
+
   // Save the current time
   current_time = *tick_time;
   update_text();
@@ -306,13 +310,13 @@ static void dialog_load(Window *me)
   conf_action_bar = action_bar_layer_create();
   action_bar_layer_add_to_window(conf_action_bar, me);
   action_bar_layer_set_click_config_provider(conf_action_bar, conf_click_config_provider);
-  
+
   action_bar_layer_set_icon(conf_action_bar, BUTTON_ID_SELECT, action_icon_confirm);
   action_bar_layer_set_icon(conf_action_bar, BUTTON_ID_DOWN, action_icon_cancel);
 
   Layer *layer = window_get_root_layer(me);
   const int16_t width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH ;
-  
+
   conf_text_layer = text_layer_create(GRect(0, 20, width, 160));
   text_layer_set_font(conf_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
   text_layer_set_background_color(conf_text_layer, GColorClear);
@@ -364,14 +368,14 @@ static void price_dialog_load(Window *me)
   price_action_bar = action_bar_layer_create();
   action_bar_layer_add_to_window(price_action_bar, me);
   action_bar_layer_set_click_config_provider(price_action_bar, price_click_config_provider);
-  
+
   action_bar_layer_set_icon(price_action_bar, BUTTON_ID_UP, action_icon_plus);
   action_bar_layer_set_icon(price_action_bar, BUTTON_ID_SELECT, action_icon_confirm);
   action_bar_layer_set_icon(price_action_bar, BUTTON_ID_DOWN, action_icon_minus);
-  
+
   Layer *layer = window_get_root_layer(me);
   const int16_t width = layer_get_frame(layer).size.w - ACTION_BAR_WIDTH - 6;
-  
+
   price_text_layer = text_layer_create(GRect(4, 20, width, 160));
   text_layer_set_font(price_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
   text_layer_set_background_color(price_text_layer, GColorClear);
@@ -419,7 +423,7 @@ static void right_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void move_right_click_handler(ClickRecognizerRef recognizer, void *context) {
   light_on();
-  
+
   // Swap current drink with the next drink
   unsigned char next_drink = current_drink+1;
   if (next_drink==NUM_DRINK_TYPES) {
@@ -429,13 +433,13 @@ static void move_right_click_handler(ClickRecognizerRef recognizer, void *contex
   unsigned char temp = settings.drawing_order[current_drink];
   settings.drawing_order[current_drink] = settings.drawing_order[next_drink];
   settings.drawing_order[next_drink] = temp;
-  
+
   current_drink = next_drink;
   APP_LOG(APP_LOG_LEVEL_DEBUG,"%d,%d,%d,%d,%d,%d,%d\n",settings.drawing_order[0],settings.drawing_order[1],
           settings.drawing_order[2],settings.drawing_order[3],settings.drawing_order[4],settings.drawing_order[5],current_drink);
   APP_LOG(APP_LOG_LEVEL_DEBUG,"%d,%d,%d,%d,%d,%d,%d\n",drinks[0].draw_slot,drinks[1].draw_slot,drinks[2].draw_slot,
           drinks[3].draw_slot,drinks[4].draw_slot,drinks[5].draw_slot,current_drink);
-  
+
   update_selection();
 }
 
@@ -456,7 +460,7 @@ static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
 
 static void window_load(Window *me) {
   action_bar = action_bar_layer_create();
-  
+
   action_bar_layer_set_click_config_provider(action_bar, click_config_provider);
   //window_set_click_config_provider(window,window_click_config_provider);
 
@@ -480,18 +484,18 @@ static void window_load(Window *me) {
   layer_add_child(layer, text_layer_get_layer(header_text_layer));
 
   int grid_size_v = width/3;
-  
+
   layer_set_clips(layer,false);
   scroll_layer = layer_create(GRect(OFFSET_X,OFFSET_Y,NUM_DRINK_TYPES/3*width,100-OFFSET_Y));
   layer_set_clips(scroll_layer,false);
   layer_add_child(layer,scroll_layer);
-  
+
   uint32_t ressources[NUM_DRINK_TYPES] = {RESOURCE_ID_IMAGE_BEER,RESOURCE_ID_IMAGE_WINE,RESOURCE_ID_IMAGE_COCKTAIL,RESOURCE_ID_IMAGE_SHOT,RESOURCE_ID_IMAGE_CIGARETTE,RESOURCE_ID_IMAGE_WATER, RESOURCE_ID_IMAGE_COFFEE};
   //unsigned char storage_slots[5] = {NUM_BEERS_PKEY,NUM_WINE_PKEY,NUM_COCKTAILS_PKEY,NUM_SHOTS_PKEY,NUM_CIGARETTES_PKEY};
-  
+
   for(int i=0;i<NUM_DRINK_TYPES;i++)
     createDrink(&drinks[settings.drawing_order[i]], scroll_layer, ressources[settings.drawing_order[i]], &settings.num_drinks[settings.drawing_order[i]], i, grid_size_v);
-  
+
   action_bar_layer_add_to_window(action_bar, me);
   light_on();
   //update_text();
@@ -519,9 +523,9 @@ static void init(void) {
   action_icon_minus =gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ACTION_ICON_MINUS_INV);
 
   light_timer = app_timer_register(10000,light_off,NULL);
-  
+
   accel_tap_service_subscribe(&accel_tap_handler);
-  
+
   // Get the count from persistent storage for use if it exists, otherwise use the default
   if(persist_exists(SETTINGS_KEY))
   {
@@ -554,31 +558,31 @@ static void init(void) {
     .load = window_load,
     .unload = window_unload,
   });
-  
+
   conf_dialog = window_create();
   window_set_window_handlers(conf_dialog, (WindowHandlers) {
     .load = dialog_load,
     .unload = reset_counters,
   });
-  
+
   price_dialog = window_create();
   window_set_window_handlers(price_dialog, (WindowHandlers) {
     .load = price_dialog_load,
     .unload = price_dialog_unload,
   });
-  
+
   window_stack_push(window, true /* Animated */);
 }
 
 static void deinit(void) {
-  
+
   update_app_glance(drinks);
   tick_timer_service_unsubscribe();
   accel_tap_service_unsubscribe();
-  
+
   // Save the count into persistent storage on app exit
   persist_write_data(SETTINGS_KEY,&settings,sizeof(Settings));
-  
+
 }
 
 int main(void) {
